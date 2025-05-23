@@ -8,7 +8,7 @@ And modify Firewall and SELinux settings (Step 6)
 
 1. Update System
  : dnf install epel-release
- : sudo dnf -y
+ : sudo dnf update -y
 
 2. Install and Configure MariaDB
  : curl -LsS -O https://downloads.mariadb.com/MariaDB/mariadb_repo_setup

@@ -45,8 +45,8 @@ And modify Firewall and SELinux settings (Step 6)
 
 4. Install Semaphore
  : sudo dnf -y install wget
- : wget https://github.com/ansible-semaphore/semaphore/releases/download/v2.13.10/semaphore_2.13.10_linux_amd64.rpm
- : sudo dnf -y install semaphore_2.13.10_linux_amd64.rpm
+ : wget https://github.com/ansible-semaphore/semaphore/releases/download/v2.15.4/semaphore_2.15.4_linux_amd64.rpm
+ : sudo dnf -y install semaphore_2.15.4_linux_amd64.rpm
 
  - Create Semaphore User and Run Setup Process
  : sudo useradd -m -d /opt/semaphore semaphore

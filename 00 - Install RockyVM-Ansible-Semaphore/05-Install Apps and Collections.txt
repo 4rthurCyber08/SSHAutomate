@@ -5,9 +5,11 @@
  : dnf install nano -y
  : dnf install vim -y
  : dnf install python3-netaddr -y
+ : yum install net-tools -y
  : ansible-galaxy collection install cisco.ios
  : pip install --upgrade ansible
 
 2. Set Permissions for Ansible
  : chmod -R 777 /etc/ansible/
  : ansible-config dump --only-changed -t all
+

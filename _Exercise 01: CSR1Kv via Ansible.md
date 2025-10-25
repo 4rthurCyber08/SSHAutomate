@@ -198,8 +198,8 @@ Then, simply click `OK` __[17]__
 
 ### 7. Identify Interface
 Power on the NetOps VM
-> Login: root
-> Pass: C1sc0123
+> Login: root  
+> Pass: C1sc0123  
 
 <br>
 
@@ -300,8 +300,8 @@ Then, `Connect` __[21]__
 <br>
 
 Enter the Username and Password
-> Username: root
-> Password: C1sc0123
+> Username: root  
+> Password: C1sc0123  
 
 Then confirm, `OK` __[23]__
 
@@ -318,3 +318,156 @@ Then confirm, `OK` __[23]__
 
 ---
 &nbsp;
+
+## Ansible Exercise: Protect the Open Ports of DEVEDGE
+### Modify the Hosts file of Linux
+~~~
+!@NetOps
+nano /etc/hosts
+~~~
+
+![csr_20](</img/00 autocsr-20.png>)
+
+<br>
+
+Add the following mapping to the hosts file:
+`192.168.102.11 edge.rivan.com` __[24]__
+
+<br>
+
+Save the changes:
+- `ctrl + s`      (save)
+- `ctrl + x`      (exit)
+
+<br>
+
+![csr_21](</img/00 autocsr-21.png>)
+
+<br>
+
+> [!NOTE]
+> Having DNS Mapping is unnecessary, we configure it just to make it more realistic.
+>   
+> Do the same for the windows PC by adding the same entry on `c:\Windows\system32\drivers\etc\hosts`
+
+<br>
+<br>
+
+### Verify
+~~~
+!@NetOps
+ping 192.168.102.11
+ping edge.rivan.com
+~~~
+
+<br>
+
+![csr_22](</img/00 autocsr-22.png>)
+
+&nbsp;
+---
+&nbsp;
+
+### Add the DEVEDGE to the Hosts file of Ansible
+~~~
+!@NetOps
+cd /etc/ansible
+nano hosts
+~~~
+
+<br>
+
+![csr_23](</img/00 autocsr-23.png>)
+
+<br>
+<br>
+
+> [!NOTE]
+> Simply ignore the default information on the hosts file, all of them are just comments.
+
+<br>
+
+Add the following `DEVEDGE` __[25]__ information to the Hosts file.
+
+<br>
+
+~~~
+!@NetOps
+[DEVEDGE]
+edge.rivan.com
+
+[DEVEDGE:vars]
+ansible_user=admin
+ansible_password=pass
+ansible_connection=network_cli
+ansible_network_os=ios
+~~~
+
+<br>
+
+![csr_24](</img/00 autocsr-24.png>)
+
+&nbsp;
+---
+&nbsp;
+
+### Create a devedge.yml file
+
+> [!NOTE]
+> To make configurations easier, it is highly recommended to create the Playbook on a text editor, preferrably VSCode,
+
+<br>
+
+Paste the contents to devedge.yml
+~~~
+---
+- name: Secure Edge
+  hosts: DEVEDGE
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Create ACL
+      ios_command:
+        commands: 
+          - conf t
+          - ip access-list extended FW-POLICY
+          - permit icmp any host 192.168.102.11
+          - permit tcp any host 192.168.102.11 eq 22
+          - permit tcp any host 192.168.102.11 eq 443
+          - permit tcp any host 192.168.102.11 eq 80
+          - end
+      tags: 
+        - genacl
+
+    - name: Apply ACL
+      ios_command:
+        commands:
+          - conf t
+          - int g3
+          - ip access-group FW-POLICY in
+          - end
+      tags:
+        - applyacl
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Obtain the public key of DEVEDGE
+By default, CSR1000v already has SSH2.  
+For devices that don't have it enabled, simply paste the ff to enable SSH2 __[26]__  
+
+~~~
+!@DEVEDGE
+conf t
+ crypto key generate rsa modulus 2048 label key
+ ip ssh rsa keypair-name key
+ ip ssh version 2
+ line vty 0 14
+  transport input all
+  login local
+  exec-timeout 0 0
+  end
+~~~
+

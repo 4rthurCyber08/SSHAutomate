@@ -82,6 +82,38 @@ Then, confirm by selecting `OK` __[08]__
 
 ![csr_06](</img/00 autocsr-06.png>)
 
+### 6. Apply configuration
+Simply paste the followng configurations to DEVEDGE.
+
+~~~
+!@DEVEDGE
+conf t
+ hostname DEVEDGE
+ enable secret pass
+ service password-encryption
+ no logging cons
+ no ip domain lookup
+ line vty 0 14
+  transport input all
+  password pass 
+  login local
+  exec-timeout 0 0
+ int g1
+  ip add 208.8.8.11 255.255.255.0
+  no shut
+ int g2
+  ip add 192.168.102.11 255.255.255.0
+  no shut
+ int g3
+  ip add 192.168.103.11 255.255.255.0
+  no shut
+ ip route 0.0.0.0 0.0.0.0 208.8.8.2
+ !
+ username admin priv 15 secret pass
+ end
+show ip int br
+~~~
+
 <br>
 <br>
 
@@ -177,6 +209,39 @@ Once logged in, enter the command `ip -br link` Then identify which interface ho
 
 ![csr_13](</img/00 autocsr-13.png>)
 
+<br>
+
+Now that we have identified which interface of the NetOps VM connects to VMNet2, we will manually configure the IP address and make sure it's persistent.
+
+<br>
+
+Simply paste the following config to the NetOps VM:
+
+~~~
+!@NetOps
+nmcli connection add \
+type ethernet \
+con-name vmnet2 \
+ifname ens192 \
+ipv4.method manual \
+ipv4.address 192.168.102.6/24 \
+autoconnect yes
+nmcli connection up vmnet2
+
+ip -4 addr
+~~~
+
+<br>
+
 &nbsp;
 ---
 &nbsp;
+
+## Verify Connectivity
+Ping both 
+- DEVEDGE = 192.168.102.11
+- NetOps = 192.168.102.6
+
+<br>
+
+![csr_14](</img/00 autocsr-14.png>)

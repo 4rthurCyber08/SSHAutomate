@@ -1,4 +1,0 @@
-On Terminal
-
-py -m pip install update pip
-py -m pip install netmiko

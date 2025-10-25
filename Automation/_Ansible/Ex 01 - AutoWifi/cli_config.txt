@@ -1,0 +1,22 @@
+FIND AND REPLACE THE FOLLOWING - From # to #
+
+! Monitor Num:      #$34T#
+
+
+!@aut
+conf t
+ hostname autap-#$34T#
+ ip domain name ccna-#$34T#.com
+ !
+ username admin privilege 15 secret pass
+ username rivan privilege 15 secret C1sc0123
+ !
+ crypto key generate rsa modulus 2048 label devops exportable
+ ip ssh rsa keypair-name devops
+ ip ssh version 2
+ !
+ line vty 0 14
+  transport input all
+  login local
+  exec-timeout 2 30
+  end

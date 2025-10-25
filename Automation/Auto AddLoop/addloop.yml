@@ -1,0 +1,15 @@
+---
+- name: addloop
+  hosts: realdevices
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "Create Loopbacks"
+      ios_command:
+        commands:
+          - conf t
+          - int lo13
+          - description Created-via-Ansible
+          - ip add 13.13.13.13 255.255.255.255
+      vars:
+        ansible_network_os: ios

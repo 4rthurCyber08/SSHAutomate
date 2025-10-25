@@ -1,0 +1,15 @@
+@Cisco
+conf t
+ hostname UTM-HQ
+ username admin privilege 15 secret pass
+ ip domain name rivan.sec
+ crypto key generate rsa modulus 2048
+ ip ssh version 2
+ ip http authentication local
+ ip http secure-server
+ restconf
+ line vty 0 14
+  login local
+  transport input all
+  exec-timeout 0 0
+  end

@@ -1,0 +1,15 @@
+{
+    "device_info": {
+        "device_type": "cisco_ios",
+        "ip": "CSR1000v IP ADDRESS",
+        "username": "admin",
+        "password": "pass",
+        "secret": "pass"
+    },
+
+    "device_config": {
+        "loop_1": "1.1.1.1",
+        "/32": "255.255.255.255",
+        "desc": "configured-via-python"
+    }
+}

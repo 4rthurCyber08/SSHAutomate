@@ -450,6 +450,10 @@ Paste the contents to devedge.yml
         - applyacl
 ~~~
 
+<br>
+
+![csr_26](</img/00 autocsr-26.png>)
+
 &nbsp;
 ---
 &nbsp;
@@ -471,3 +475,34 @@ conf t
   end
 ~~~
 
+<br>
+<br>
+
+Get the public key of DEVEDGE.  
+~~~
+!@NetOps
+ssh admin@edge.rivan.com
+~~~
+
+Accept the keys, then exit the DEVEDGE terminal
+~~~
+!@NetOps
+Are you sure you want to continue connecting (yes/no/[fingerprint])?  yes
+
+Password: pass
+
+DEVEDGE#
+DEVEDGE# exit
+
+Connection to edge.rivan.com closed.
+~~~
+
+<br>
+
+![csr_27](</img/00 autocsr-27.png>)
+
+&nbsp;
+---
+&nbsp;
+
+### 

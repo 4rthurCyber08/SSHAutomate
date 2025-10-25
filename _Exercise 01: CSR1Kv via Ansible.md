@@ -505,4 +505,75 @@ Connection to edge.rivan.com closed.
 ---
 &nbsp;
 
-### 
+### Run the Ansible Playbook
+Verify connectivity for Ansible by using the `ping module` __[27]__
+
+~~~
+!@NetOps
+ansible DEVEDGE -m ping
+~~~
+
+<br>
+
+![csr_28](</img/00 autocsr-28.png>)
+
+&nbsp;
+---
+&nbsp;
+
+__Run the playbook per TASKS__  __[28]__  
+
+<br>
+
+~~~
+ansible-playbook devedge.yml --tags genacl
+~~~
+
+<br>
+
+![csr_29](</img/00 autocsr-29.png>)
+
+&nbsp;
+---
+&nbsp;
+
+__Run all tasks on the Ansible Playbook__  __[29]__  
+
+<br>
+
+~~~
+ansible-playbook devedge.yml
+~~~
+
+<br>
+
+![csr_29](</img/00 autocsr-30.png>)
+
+&nbsp;
+---
+&nbsp;
+
+__VERIFICATION__  
+Verify the ACL by scanning open ports of DEVEDGE VM
+
+<br>
+
+~~~
+!@cmd
+nmap -v 192.168.102.11
+~~~
+
+<br>
+
+![csr_31](</img/00 autocsr-31.png>)
+
+<br>
+<br>
+
+---
+&nbsp;
+
+## 🎯 EXERCISE: Configure an Ansible Playbook to remove the recently applied ACL on DEVEDGE.
+
+<br>
+<br>

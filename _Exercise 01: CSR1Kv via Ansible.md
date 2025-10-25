@@ -238,10 +238,83 @@ ip -4 addr
 &nbsp;
 
 ## Verify Connectivity
-Ping both 
+Ping both VMs on CMD
 - DEVEDGE = 192.168.102.11
 - NetOps = 192.168.102.6
+
+~~~
+!@cmd
+ping 192.168.102.11
+ping 192.168.102.6
+~~~
 
 <br>
 
 ![csr_14](</img/00 autocsr-14.png>)
+
+<br>
+<br>
+
+---
+&nbsp;
+
+### Remote Access
+Since both VMs are pingable, access their terminal via SecureCRT.
+
+__DEVEDGE:__
+- Protocol: Telnet
+- Hostname: 192.168.102.11
+- Port: 23
+
+<br>
+
+![csr_15](</img/00 autocsr-15.png>)
+
+<br>
+<br>
+
+__NetOps:__
+- Protocol: SSHv2
+- Hostname: `192.168.102.6` __[18]__
+- Port: 22
+- Username: `root` __[19]__
+- `Password` __[20]__ Authentication
+
+<br>
+
+Then, `Connect` __[21]__
+
+<br>
+
+![csr_16](</img/00 autocsr-16.png>)
+
+<br>
+<br>
+
+`Accept & Save` __[22]__ the Host Keys.
+
+<br>
+
+![csr_17](</img/00 autocsr-17.png>)
+
+<br>
+
+Enter the Username and Password
+> Username: root
+> Password: C1sc0123
+
+Then confirm, `OK` __[23]__
+
+<br>
+
+![csr_18](</img/00 autocsr-18.png>)
+
+<br>
+
+![csr_19](</img/00 autocsr-19.png>)
+
+<br>
+<br>
+
+---
+&nbsp;

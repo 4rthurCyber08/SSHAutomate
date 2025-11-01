@@ -1,0 +1,12 @@
+- name: Configure OSPF Routing
+  hosts: ios
+  gather_facts: no
+
+  tasks:
+    - name: Enable OSPF and configure networks
+      ios_config:
+        parents: "router ospf {{ ospf_process }}"
+        lines:
+          - router-id {{ router_id }}
+          - network {{ item.network }} {{ item.wildcard }} area {{ item.area }}
+      loop: "{{ ospf_networks }}"

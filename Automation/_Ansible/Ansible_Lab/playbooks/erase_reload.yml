@@ -1,0 +1,23 @@
+- name: Erase startup-config and reload device
+  hosts: ios
+  gather_facts: no
+
+  vars_prompt:
+    - name: confirm_reset
+      prompt: "Type YES to erase startup-config and reload device"
+      private: no
+
+  tasks:
+    - fail:
+        msg: "Reset aborted."
+      when: confirm_reset != "YES"
+
+    - ios_command:
+        commands:
+          - write erase
+          - write memory
+          - reload in 1
+      register: reload_output
+
+    - debug:
+        var: reload_output.stdout_lines

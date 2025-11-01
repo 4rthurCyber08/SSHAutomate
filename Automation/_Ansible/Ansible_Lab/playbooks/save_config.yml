@@ -1,0 +1,7 @@
+- name: Save configuration to NVRAM
+  hosts: ios
+  gather_facts: no
+  tasks:
+    - name: Write mem
+      ios_config:
+        save_when: always

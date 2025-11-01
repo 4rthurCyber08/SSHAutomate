@@ -1,0 +1,7 @@
+- name: Configure IPs on IOS interfaces
+  hosts: ios
+  gather_facts: no
+  tasks:
+    - name: Apply interface config
+      ios_config:
+        src: ../templates/interface_config.j2

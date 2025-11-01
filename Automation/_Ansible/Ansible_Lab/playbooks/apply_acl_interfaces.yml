@@ -1,0 +1,12 @@
+- name: Apply ACLs to Interfaces
+  hosts: ios
+  gather_facts: no
+
+  tasks:
+    - name: Bind ACLs to interfaces
+      ios_config:
+        parents: "interface {{ item.interface }}"
+        lines:
+          - "{{ 'ip access-group ' + item.inbound + ' in' if item.inbound is defined else '' }}"
+          - "{{ 'ip access-group ' + item.outbound + ' out' if item.outbound is defined else '' }}"
+      loop: "{{ acl_interfaces }}"

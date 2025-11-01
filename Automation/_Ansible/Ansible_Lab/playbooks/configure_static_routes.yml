@@ -1,0 +1,9 @@
+- name: Add static routes
+  hosts: ios
+  gather_facts: no
+  tasks:
+    - name: Configure static routes
+      ios_config:
+        lines:
+          - ip route {{ item.dest }} {{ item.next_hop }}
+      loop: "{{ static_routes }}"

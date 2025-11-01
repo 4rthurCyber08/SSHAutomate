@@ -1,0 +1,11 @@
+- name: Backup Running Config to FTP Server
+  hosts: ios
+  gather_facts: no
+
+  tasks:
+    - name: Push running config to FTP server
+      ios_command:
+        commands:
+          - command: "copy running-config ftp://{{ ftp_user }}:{{ ftp_pass }}@{{ ftp_server }}/{{ ftp_path }}/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y%m%d-%H%M%S') }}.cfg"
+            prompt: "Destination filename"
+            answer: ""

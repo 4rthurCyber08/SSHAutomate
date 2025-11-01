@@ -1,0 +1,35 @@
+- name: Configure Access Lists on Cisco IOS
+  hosts: ios
+  gather_facts: no
+  tasks:
+
+    # Standard ACLs
+    - name: Create Standard ACLs
+      ios_config:
+        parents: "ip access-list standard {{ item.number }}"
+        lines: "{{ item.rules }}"
+      loop: "{{ standard_acls }}"
+      when: standard_acls is defined
+
+    - name: Add remarks to Standard ACLs
+      ios_config:
+        parents: "ip access-list standard {{ item.0.number }}"
+        lines: "remark {{ item.1 }}"
+      loop: "{{ standard_acls | subelements('remarks', skip_missing=True) }}"
+      when: standard_acls is defined
+
+
+    # Extended ACLs
+    - name: Create Extended ACLs
+      ios_config:
+        parents: "ip access-list extended {{ item.name }}"
+        lines: "{{ item.rules }}"
+      loop: "{{ extended_acls }}"
+      when: extended_acls is defined
+
+    - name: Add remarks to Extended ACLs
+      ios_config:
+        parents: "ip access-list extended {{ item.0.name }}"
+        lines: "remark {{ item.1 }}"
+      loop: "{{ extended_acls | subelements('remarks', skip_missing=True) }}"
+      when: extended_acls is defined

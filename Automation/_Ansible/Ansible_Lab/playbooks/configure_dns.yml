@@ -1,9 +1,0 @@
-- name: Set DNS servers on IOS devices
-  hosts: ios
-  gather_facts: no
-  tasks:
-    - name: Set name servers
-      ios_config:
-        lines:
-          - ip name-server {{ dns_servers[0] }}
-          - ip name-server {{ dns_servers[1] }}

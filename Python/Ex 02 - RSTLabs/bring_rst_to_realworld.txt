@@ -1,0 +1,9 @@
+D1's interface e3/3 will recieve an ip from network adapter 2 of the VM, which will allow it to communicate with your PC.
+
+@cmd
+route add 172.16.255.0 mask 255.255.255.128 [ip of D1's e3/3 interface]
+
+This static route will be removed after rebooting the PC
+or applying the: 
+
+route delete x.x.x.x mask x.x.x.x x.x.x.x

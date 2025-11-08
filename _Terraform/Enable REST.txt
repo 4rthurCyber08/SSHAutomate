@@ -1,0 +1,12 @@
+@edge
+conf t
+ username admin privilege 15 secret pass
+ ip http authentication local
+ ip http secure-server
+ restconf
+ line vty 0 14
+  password pass
+  login local
+  transport input all
+  exec-timeout 0 0
+  end

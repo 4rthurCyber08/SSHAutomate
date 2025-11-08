@@ -1,0 +1,155 @@
+!@CSR1Kv
+config t
+!username admin privilege 15 secret pass
+ip http secure-server
+ip http authentication local
+restconf
+end
+
+@@@postman:
+type: basic Autho
+username: admin password: pass
+headers:
+	Accept: application/yang-data+json
+	Content-Type: application/yang-data+json
+
+GET:
+https://192.168.102.11/restconf/data/ietf-interfaces:interfaces
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native?depth=1
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native?depth=2
+
+GET the hostname and version:
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/version
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/hostname
+
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/interface/Loopback=0
+
+GET
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/license
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/license/udi
+
+GET all the interfaces: show ip int brief:
+
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/interface
+
+GET the info on gigabitethernet=1
+
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/interface/GigabitEthernet=1
+
+@@@@@@@@@@@@@@@@ PATCH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+PATCH:
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/interface/Loopback
+
+{
+  "Cisco-IOS-XE-native:Loopback": {
+    "name": 0,
+    "ip": {
+      "address": {
+        "primary": {
+          "address": "172.16.30.1",
+          "mask": "255.255.255.255"
+        }
+      }
+    }
+  }
+}
+
+
+
+
+=================================
+Module to configure interface
+=================================
+
+
+Configure the interface Loopback0
+PUT:
+https://192.168.102.11/restconf/data/Cisco-IOS-XE-native:native/interface/Loopback=0
+
+{
+  "Cisco-IOS-XE-native:Loopback": {
+    "name": 0,
+    "ip": {
+      "address": {
+        "primary": {
+          "address": "172.16.30.1",
+          "mask": "255.255.255.255"
+        }
+      }
+    }
+  }
+}
+
+=================================
+
+Configure the lan interface (G1)
+=================================
+
+https://{{host}}:{{port}}/restconf/data/Cisco-IOS-XE-native:native/interface/GigabitEthernet=1
+
+{
+    "Cisco-IOS-XE-native:GigabitEthernet": {
+        "name": "1",
+        "description": "## LAN ##",
+        "ip": {
+            "address": {
+                "primary": {
+                    "address": "192.168.40.1",
+                    "mask": "255.255.255.0"
+                }
+            }
+        },
+        "Cisco-IOS-XE-ethernet:negotiation": {
+            "auto": true
+        }
+    }
+}
+
+
+
+=================================
+Configure eigrp
+=================================
+
+{
+    "Cisco-IOS-XE-eigrp:router-eigrp": {
+        "eigrp": {
+            "named-mode": [
+                {
+                    "name": "CCIE",
+                    "address-family": {
+                        "ipv4": {
+                            "af-ipv4": [
+                                {
+                                    "unicast": "unicast",
+                                    "autonomous-system": 63004,
+                                    "network": {
+                                        "address-wildcard": [
+                                            {
+                                                "ipv4-address": "172.16.30.2",
+                                                "wildcard": "0.0.0.0"
+                                            },
+                                            {
+                                                "ipv4-address": "192.168.0.0",
+                                                "wildcard": "0.0.255.255"
+                                            }
+                                        ]
+                                    },
+                                    "topology": {
+                                        "topo-base": [
+                                            {
+                                                "topology-base": "base"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

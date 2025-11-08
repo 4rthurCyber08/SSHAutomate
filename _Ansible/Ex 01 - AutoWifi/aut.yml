@@ -1,0 +1,57 @@
+---
+
+# HOSTNAME            =  #H0STN4ME#
+# SSID                =  #SS1D#
+# VLAN                =  #VL4N#
+# AUTHENTICATION      =  #4UTHENT1C4T1ON#
+# KEY-MANAGEMENT      =  #KEY_M4N#
+# WIFI-PASSWORD       =  #P4SSW0RD#
+# CHANNEL             =  #CH4NNEL#
+# ENCRYPTION          =  #ENCR_M0D#
+
+- name: AutoWifi
+  hosts: aut
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Configuring SSID
+      ios_command:
+        commands:
+          - conf t
+          - hostname #H0STN4ME#
+          - dot11 ssid #SS1D#
+          - "vlan #VL4N#"
+          - authentication #4UTHENT1C4T1ON#
+          - authentication key-management #KEY_M4N#
+          - wpa-psk ascii #P4SSW0RD#
+          - guest-mode
+          - default int dot11radio 0
+          - default interface gigabitEthernet 0
+          - end
+      tags:
+        - config
+
+    - name: Deploying WIFI
+      ios_command:
+        commands:
+          - conf t
+          - int dot11radio 0
+          - no shut
+          - channel #CH4NNEL#
+          - encryption mode ciphers #ENCR_M0D#
+          - "encryption vlan #VL4N# mode ciphers #ENCR_M0D#"
+          - ssid #SS1D#
+          - end
+      tags:
+        - deploy
+
+    - name: Connecting SSID to LAN
+      ios_command:
+        commands:
+          - conf t
+          - int dot11radio 0.#VL4N#
+          - "encapsulation dot1q #VL4N# native"
+          - bridge-group 1
+          - end
+      tags:
+        - connect

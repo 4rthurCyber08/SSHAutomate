@@ -1,0 +1,12 @@
+{
+	"key-value-pair": {
+		"string": "I am a string",
+		"number-int": 1,
+		"number-float": 1.0,
+		"array": ["item-1", 2, "three"],
+		"bool": true,
+		"nested-key-value": {
+			"nested-key": "nested-value" 
+		}
+	}
+}

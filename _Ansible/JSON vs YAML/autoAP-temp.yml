@@ -1,0 +1,14 @@
+key-value-pair:
+  string: I am a string
+  another-string: "I'm also a string"
+  number-int: 1
+  number-float: 1.0
+  array: 
+    - item-1
+    - 2
+    - three
+  another-array: ["item", 2]
+  bool: true
+  nested-key-value:
+    nested-key: nested-value
+  

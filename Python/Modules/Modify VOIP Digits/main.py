@@ -1,3 +1,6 @@
+import netmiko
+from netmiko import ConnectHandler
+
 def get_devices():
     prompt = input('Which Monitors to be configured? [ex. 11,12,21]: ')
     active_pc = prompt.split(',')
@@ -78,8 +81,6 @@ def config_devices(user_m, add_dn='', terminal=False):
 if __name__ == '__main__':
     import argparse
     import multiprocessing
-    import netmiko
-    from netmiko import ConnectHandler
 
     ### ARGUMENT PARSER
     parser = argparse.ArgumentParser()
@@ -107,4 +108,5 @@ if __name__ == '__main__':
         i.join()
     
     print('Configuration Complete')
+
 

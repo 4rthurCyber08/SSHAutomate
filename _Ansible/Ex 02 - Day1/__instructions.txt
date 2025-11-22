@@ -281,14 +281,19 @@ ansible ctaas,cbaba,cucm,edge -m ping
 Make sure pings are SUCCESS
 
 
-=====| Step 9 - Run the playbook
+=====| Step 9 - Download the Configs
 
 @NetOps
 git clone https://github.com/4rthurcyber08/SSHAUTOMATE
 cd SSHAUTOMATE/_Ansible/Ex\ 02\ -\ Day1/__day1_project/
 
 
+=====| Step 10 - Run the Playbook
+
+@NetOps
+ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 
 
-
-
+If Runnig the playbook a second time:
+@NetOps
+ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs

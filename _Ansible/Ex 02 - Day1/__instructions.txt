@@ -284,8 +284,9 @@ Make sure pings are SUCCESS
 =====| Step 9 - Run the playbook
 
 @NetOps
+git clone https://github.com/4rthurcyber08/SSHAUTOMATE
+cd SSHAUTOMATE/_Ansible/Ex\ 02\ -\ Day1/__day1_project/
 
-ansible-playbook run_all.yml
 
 
 

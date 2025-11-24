@@ -218,15 +218,15 @@ conf t
 
 Identify Interface-Interface binding
 
-@NetOps
+!@NetOps
 ip -br link
 
-@NetOps
+!@NetOps
 ifconfig ens256 10.#$34T#.1.6 netmask 255.255.255.0 up
 ip route add 10.0.0.0/8 via 10.#$34T#.1.4 dev ens256
 ip route add 200.0.0.0/24 via 10.#$34T#.1.4 dev ens256
 
-@NetOps
+!@NetOps
 sudo nmcli connection add \
 type ethernet \
 con-name "TunayNaLAN" \
@@ -238,63 +238,54 @@ autoconnect yes
 =====| Step 7 - TFTP & Exchange SSH Keys
 
 TFTP
-@NetOps
+!@NetOps
 tftp 10.#$34T#.1.10
 get gen_day1.py
 
-
 Delete existing SSH Keys
-
-@NetOps
+!@NetOps
 rm -rf /root/.ssh/known_hosts
 
-
 SSH to the ff devices:
-
 	10.#$34T#.1.2		CoreTaas
 	10.#$34T#.1.4		CoreBaba
 	10.#$34T#.100.8		CUCM
 	10.#$34T#.#$34T#.1	EDGE
 
-
-@NetOps
+!@NetOps
 ssh admin@10.#$34T#.1.2
 
-
 Accept keys
-
-@NetOps
+!@NetOps
 yes
 
-
 End the SSH session
-
-@NetOps
+!@NetOps
 exit
 
-
-=====| Step 8 - Dry run
-
-@NetOps
-ansible ctaas,cbaba,cucm,edge -m ping
-
-Make sure pings are SUCCESS
-
-
-=====| Step 9 - Download the Configs
-
-@NetOps
+=====| Step 8 - Download the Configs
+!@NetOps
 git clone https://github.com/4rthurcyber08/SSHAUTOMATE
 cd SSHAUTOMATE/_Ansible/Ex\ 02\ -\ Day1/__day1_project/
 
 
-=====| Step 10 - Run the Playbook
+=====| Step 9 - Specify the MAC address of End devices
+Camera MAC Addresses:
+!@NetOps
+nano host_vars/cbaba_#$34T#.yml
 
-@NetOps
+EPhone MAC Addresses:
+!@NetOps
+nano host_vars/cucm_#$34T#.yml
+
+
+=====| Step 10 - Run the Playbook
+!@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 
 
 If Runnig the playbook a second time:
-@NetOps
+!@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs
+
 

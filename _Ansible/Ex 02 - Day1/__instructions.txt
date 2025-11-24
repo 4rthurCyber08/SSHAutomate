@@ -316,6 +316,7 @@ conf t
  ip http server
  ip http secure-server
  ip http authentication local
+ ip route 0.0.0.0 0.0.0.0 208.8.8.2
  end
 wr
 !
@@ -511,6 +512,7 @@ ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 If Runnig the playbook a second time:
 !@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs
+
 
 
 

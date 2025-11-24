@@ -61,7 +61,7 @@ conf t
   app-resource profile custom
    cpu 1500 
    memory 512
-   persistent-disk 1000
+   persist-disk 1000
    end
 
 
@@ -173,4 +173,5 @@ pip3 install bcrypt~=3.2.2
 
 !@CSR1Kv - bash shell
 yum install -y gcc rust cargo python3-devel openssl-devel libffi-devel
+
 python3 -m pip install setuptools_rust

@@ -458,7 +458,6 @@ Connect to Management Interfaces of Devices
 
 NetOps-PH: 192.168.102.6
 UTM-PH: 192.168.102.11
-UTM-JP: 192.168.102.12
 
 =====| Step 7 - TFTP & Exchange SSH Keys
 
@@ -512,6 +511,7 @@ ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 If Runnig the playbook a second time:
 !@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs
+
 
 
 

@@ -213,6 +213,16 @@ conf t
 
 =====| Step 5 - Run NetOps Virtual Machine
 
+NetOps:
+  Name: NetOps-PH
+  
+  | NetAdapter   |                    |
+  | ---          | ---                |
+  | NetAdapter   | VMNet1             |
+  | NetAdapter 2 | VMNet2             |
+  | NetAdapter 3 | VMNet3             |
+  | NetAdapter 4 | Bridge (Replicate) |
+
 
 =====| Step 6 - Set IP address and Routing
 
@@ -287,5 +297,6 @@ ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 If Runnig the playbook a second time:
 !@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs
+
 
 

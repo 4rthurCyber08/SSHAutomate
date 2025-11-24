@@ -7,17 +7,22 @@ Replace all ( ctrl + alt + enter)
 
 ==========================================
 
+&nbsp;
+---
+&nbsp;
 
-=====| STEP 1 - Add routing to PC
-
-@command prompt
+### Step 1 - Add routing to PC
+~~~
+!@cmd
 route add 10.0.0.0 mask 255.0.0.0 10.#$34T#.1.4
 route add 200.0.0.0 mask 255.255.255.0 10.#$34T#.1.4
+~~~
 
+<br>
 
-=====| STEP 2 - Add ip address and routing to device
-
-@coreTaas
+### Step 2 - Add ip address and routing to device
+~~~
+!@coreTaas
 conf t
  int vlan 1
   no shut
@@ -31,8 +36,12 @@ conf t
   login
   exec-timeout 0 0
   end
+~~~
 
-@coreBaba
+<br>
+
+~~~
+!@coreBaba
 conf t
  int vlan 1
   no shut
@@ -65,8 +74,12 @@ conf t
   login
   exec-timeout 0 0
   end
+~~~
 
-@cucm
+<br>
+
+~~~
+!@cucm
 conf t
  int fa0/0
   no shut
@@ -81,8 +94,12 @@ conf t
   login
   exec-timeout 0 0
   end
+~~~
 
-@edge
+<br>
+
+~~~
+!@edge
 conf t
  int gi 0/0/0
   ip add 10.#$34T#.#$34T#.1 255.255.255.0
@@ -97,48 +114,68 @@ conf t
   login
   exec-timeout 0 0
   end
+~~~
 
+&nbsp;
+---
+&nbsp;
 
-=====| Step 3 - Telnet to each device
-
+### Step 3 - Telnet to each device
 On SecureCRT:
+| IP                 | Device   |
+| ---                | ---      |
+| 10.#$34T#.1.2	     | CoreTaas |
+| 10.#$34T#.1.4      | CoreBaba |
+| 10.#$34T#.100.8    | CUCM     |
+| 10.#$34T#.#$34T#.1 | EDGE     |
 
-	10.#$34T#.1.2		CoreTaas
-	10.#$34T#.1.4		CoreBaba
-	10.#$34T#.100.8		CUCM
-	10.#$34T#.#$34T#.1	EDGE
+&nbsp;
+---
+&nbsp;
 
-
-=====| Step 4 - Note MAC Addresses
-
+### Step 4 - Note MAC Addresses
+~~~
 @CoreBaba
 sh mac address-table
+~~~
+
+<br>
 
 Camera 6 MAC Address (fa0/6):   replaceMe
 Camera 8 MAC Address (fa0/8):   replaceMe
 Ephone 1 MAC Address (fa0/5):   replaceMe
 Ephone 2 MAC Address (fa0/7):   replaceMe
 
+&nbsp;
+---
+&nbsp;
 
-=====| Step 4 - Enable SSH
-
+### Step 4 - Enable SSH
 For an SSH connection to be established, the device must have:
-    - a non-default hostname         hostname coreBaba#$34T#
-    - a domain name                  ip domain name day1lab.com
-    - a local user account           username admin privilege 15 secret pass
-    - generated crypto keys          crypto key generate rsa modulus 2048
-    - SSH enabled                    ip ssh version 2
-    - enable remote access           transport input all
-    - enable remote user/pass login  login local
+| Description                      | Command                                  |
+| ---                              | ---                                      |
+| a non-default hostname           | hostname coreBaba#$34T#                  |
+| a domain name                    | ip domain name day1lab.com               |
+| a local user account             | username admin privilege 15 secret pass  |
+| generated crypto keys            | crypto key generate rsa modulus 2048     |
+| SSH enabled                      | ip ssh version 2                         |
+| enable remote access             | transport input all                      |
+| enable remote user/pass login    | login local                              |
+
+<br>
 
 Extra lines
-    - password encryption            service password-encryption
-    - no logs                        no logging console
-    - no domain lookups              no ip domain-lookup
-    - no timeout                     exec-timeout 0 0
+| Description             | Command                      |
+| ---                     | ---                          |
+| password encryption     | service password-encryption  |
+| no logs                 | no logging console           |
+| no domain lookups       | no ip domain-lookup          |
+| no timeout              | exec-timeout 0 0             |
 
+<br>
 
-@coreTaas
+~~~
+!@coreTaas
 conf t
  hostname coreTaas-#$34T#
  service password-encryption
@@ -155,9 +192,12 @@ conf t
  ip ssh rsa keypair-name devs
  ip ssh version 2
  end
- 
- 
-@coreBaba
+~~~
+
+<br>
+
+~~~
+!@coreBaba
 conf t
  hostname coreBaba-#$34T#
  service password-encryption
@@ -174,9 +214,12 @@ conf t
  ip ssh rsa keypair-name devs
  ip ssh version 2
  end
- 
+~~~
 
-@cucm
+<br>
+
+~~~
+!@cucm
 conf t
  hostname cucm-#$34T#
  service password-encryption
@@ -192,8 +235,12 @@ conf t
  ip ssh rsa keypair-name devs
  ip ssh version 2
  end
+~~~
 
-@edge
+<br>
+
+~~~
+!@edge
 conf t
  hostname edge-#$34T#
  service password-encryption
@@ -209,10 +256,13 @@ conf t
  ip ssh rsa keypair-name devs
  ip ssh version 2
  end
+~~~
 
+&nbsp;
+---
+&nbsp;
 
-=====| Step 5 - Run NetOps Virtual Machine
-
+### Step 5 - Run Virtual Machines
 NetOps:
   Name: NetOps-PH
   
@@ -223,27 +273,192 @@ NetOps:
   | NetAdapter 3 | VMNet3             |
   | NetAdapter 4 | Bridge (Replicate) |
 
+<br>
 
-=====| Step 6 - Set IP address and Routing
+CSR1000v:
+  Name: UTM-PH
+  
+  | NetAdapter   |        |
+  | ---          | ---    |
+  | NetAdapter   | NAT    |
+  | NetAdapter 2 | VMNet2 |
+  | NetAdapter 3 | VMNet3 |
 
-Identify Interface-Interface binding
+&nbsp;
+---
+&nbsp;
 
-!@NetOps
+### Step 6 - Set IP address and Routing
+~~~
+!@UTM-PH
+conf t
+ hostname UTM-PH
+ enable secret pass
+ service password-encryption
+ no logging cons
+ no ip domain lookup
+ line vty 0 14
+  transport input all
+  password pass
+  login local
+  exec-timeout 0 0
+ int g1
+  ip add 208.8.8.11 255.255.255.0
+  no shut
+ int g2
+  ip add 192.168.102.11 255.255.255.0
+  no shut
+ int g3
+  ip add 11.11.11.113 255.255.255.224
+  no shut
+ !
+ username admin privilege 15 secret pass
+ ip http server
+ ip http secure-server
+ ip http authentication local
+ end
+wr
+!
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### NetOps-PH Setup
+> Login: root
+> Pass: C1sc0123
+
+<br>
+
+1. Get the MAC Address for the Bridge connection
+VMWare > NetOps-PH Settings > NetAdapter (2, 3, & 4) > Advance > MAC Address
+
+| NetAdapter   | MAC Address      | VM Interface | ENS     |
+| ---          | ---              | ---          | ---     |
+| NetAdapter 2 | ___.___.___.___  | ens___       |  ens192 |
+| NetAdapter 3 | ___.___.___.___  | ens___       |  ens224 |
+| NetAdapter 4 | ___.___.___.___  | ens___       |  ens256 |
+
+<br>
+
+2. Get Network-VM Mapping
+~~~
+!@NetOps-PH
 ip -br link
+~~~
 
-!@NetOps
+<br>
+
+3. Modify Interface IP
+VMNet2:  192.168.102.6/24
+VMNet3:  11.11.11.100/27
+Bridged: 10.#$34T#.1.6/24
+
+<br>
+
+~~~
+!@NetOps-PH
+ifconfig ens192 192.168.102.6 netmask 255.255.255.0 up
+ifconfig ens224 11.11.11.100 netmask 255.255.255.224 up
 ifconfig ens256 10.#$34T#.1.6 netmask 255.255.255.0 up
-ip route add 10.0.0.0/8 via 10.#$34T#.1.4 dev ens256
-ip route add 200.0.0.0/24 via 10.#$34T#.1.4 dev ens256
+~~~
 
-!@NetOps
-sudo nmcli connection add \
+<br>
+
+Verify:
+~~~
+!@NetOps-PH
+ip -4 addr
+
+nmcli connection show
+netstat -rn
+~~~
+
+<br>
+
+or  
+
+<br>
+
+__Using Network Management CLI for persistent IP.__
+
+<br>
+
+~~~
+!@NetOps-PH
+nmcli connection add \
 type ethernet \
-con-name "TunayNaLAN" \
+con-name VMNET2 \
+ifname ens192 \
+ipv4.method manual \
+ipv4.addresses 192.168.102.6/24 \
+autoconnect yes
+
+nmcli connection up VMNET2
+~~~
+
+<br>
+
+Verify:
+~~~
+!@NetOps-PH
+ip -4 addr
+
+nmcli connection show
+netstat -rn
+~~~
+
+<br>
+
+### Provide Connections for VMNet3 & and Bridge Connections
+VMNet3:
+~~~
+!@NetOps-PH
+nmcli connection add \
+type ethernet \
+con-name VMNET3 \
+ifname ens224 \
+ipv4.method manual \
+ipv4.addresses 11.11.11.100/27 \
+autoconnect yes
+
+nmcli connection up VMNET3
+~~~
+
+<br>
+
+Bridged:
+~~~
+!@NetOps-PH
+nmcli connection add \
+type ethernet \
+con-name BRIDGED \
 ifname ens256 \
 ipv4.method manual \
-ipv4.address 10.#$34T#.1.6/24 \
+ipv4.addresses 10.#$34T#.1.6/24 \
 autoconnect yes
+
+nmcli connection up BRIDGED
+~~~
+
+<br>
+
+4. Routing
+~~~
+!@NetOps-PH
+ip route add 10.0.0.0/8 via 10.#$34T#.1.4 dev ens256
+ip route add 200.0.0.0/24 via 10.#$34T#.1.4 dev ens256
+ip route add 0.0.0.0/0 via 11.11.11.113 dev ens224
+~~~
+
+
+### Remote Access
+Connect to Management Interfaces of Devices
+
+NetOps-PH: 192.168.102.6
+UTM-PH: 192.168.102.11
+UTM-JP: 192.168.102.12
 
 =====| Step 7 - TFTP & Exchange SSH Keys
 
@@ -297,6 +512,7 @@ ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml
 If Runnig the playbook a second time:
 !@NetOps
 ansible-playbook -i rivan_mkt.ini playbooks/deploy_#$34T#.yml  --skip-tags ivrs
+
 
 
 

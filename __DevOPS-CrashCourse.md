@@ -4,16 +4,12 @@
 ## SETUP
 Setup:  
   - RSTHayup: NetAuto Lab
+  - NetOps-PH
   - CSR1000v
-    - Name: DEVOPS-#$34T#
-    - NetAdapter: NAT
-    - NetAdapter 2: VMNet2
-    - NetAdapter 3: Bridged (Replicate)
 
 <br>
 
-__RSTHayup: NetAuto__  
-
+### RSTHayup: NetAuto
 1. Turn on all devices, then run the python script from "Ex 03 - NetAuto"
 
 <br>
@@ -31,22 +27,252 @@ route add 10.255.12.0 mask 255.255.252.0 [C1's e0/0 IP]
 <br>
 <br>
 
-__CSR1000v__  
+### Run Servers and Edge Routers
+NetOps:
+  Name: NetOps-PH
+  
+  | NetAdapter   |                    |
+  | ---          | ---                |
+  | NetAdapter   | VMNet1             |
+  | NetAdapter 2 | VMNet2             |
+  | NetAdapter 3 | VMNet3             |
+  | NetAdapter 4 | Bridge (Replicate) |
 
+<br>
+
+CSR1000v:
+  Name: UTM-PH
+  
+  | NetAdapter   |        |
+  | ---          | ---    |
+  | NetAdapter   | NAT    |
+  | NetAdapter 2 | VMNet2 |
+  | NetAdapter 3 | VMNet3 |
+
+&nbsp;
+---
+&nbsp;
+
+### Set IP address and Routing
 ~~~
-!@DEVOPS
+!@UTM-PH
 conf t
- hostname DEVOPS-#$34T#
+ hostname UTM-PH
  enable secret pass
  service password-encryption
  no logging cons
- ip domain lookup
- ip name-server 8.8.8.8 8.8.4.4
- ip route 0.0.0.0 0.0.0.0 208.8.8.2
- ip route 10.0.0.0 255.0.0.0 10.#$34T#.1.4
- ip route 200.0.0.0 255.255.255.0 10.#$34T#.1.4
+ no ip domain lookup
+ line vty 0 14
+  transport input all
+  password pass
+  login local
+  exec-timeout 0 0
+ int g1
+  ip add 208.8.8.11 255.255.255.0
+  no shut
+ int g2
+  ip add 192.168.102.11 255.255.255.0
+  no shut
+ int g3
+  ip add 11.11.11.113 255.255.255.224
+  no shut
  !
+ username admin privilege 15 secret pass
+ ip http server
+ ip http secure-server
+ ip http authentication local
+ ip route 0.0.0.0 0.0.0.0 208.8.8.2
+ end
+wr
+!
+~~~
+
+
+<br>
+
+__NetOps-PH Setup__
+> Login: root
+> Pass: C1sc0123
+
+<br>
+
+1. Get the MAC Address for the Bridge connection
+VMWare > NetOps-PH Settings > NetAdapter (2, 3, & 4) > Advance > MAC Address
+
+| NetAdapter   | MAC Address      | VM Interface | ENS     |
+| ---          | ---              | ---          | ---     |
+| NetAdapter 2 | ___.___.___.___  | ens___       |  ens192 |
+| NetAdapter 3 | ___.___.___.___  | ens___       |  ens224 |
+| NetAdapter 4 | ___.___.___.___  | ens___       |  ens256 |
+
+<br>
+
+2. Get Network-VM Mapping
+~~~
+!@NetOps-PH
+ip -br link
+~~~
+
+<br>
+
+3. Modify Interface IP
+VMNet2:  192.168.102.6/24
+VMNet3:  11.11.11.100/27
+Bridged: 10.#$34T#.1.6/24
+
+<br>
+
+~~~
+!@NetOps-PH
+ifconfig ens192 192.168.102.6 netmask 255.255.255.0 up
+ifconfig ens224 11.11.11.100 netmask 255.255.255.224 up
+ifconfig ens256 10.#$34T#.1.6 netmask 255.255.255.0 up
+~~~
+
+<br>
+
+Verify:
+~~~
+!@NetOps-PH
+ip -4 addr
+
+nmcli connection show
+netstat -rn
+~~~
+
+<br>
+
+or  
+
+<br>
+
+__Using Network Management CLI for persistent IP.__
+
+<br>
+
+VMNet2:
+~~~
+!@NetOps-PH
+nmcli connection add \
+type ethernet \
+con-name VMNET2 \
+ifname ens192 \
+ipv4.method manual \
+ipv4.addresses 192.168.102.6/24 \
+autoconnect yes
+
+nmcli connection up VMNET2
+~~~
+
+<br>
+
+VMNet3:
+~~~
+!@NetOps-PH
+nmcli connection add \
+type ethernet \
+con-name VMNET3 \
+ifname ens224 \
+ipv4.method manual \
+ipv4.addresses 11.11.11.100/27 \
+autoconnect yes
+
+nmcli connection up VMNET3
+~~~
+
+<br>
+
+Bridged:
+~~~
+!@NetOps-PH
+nmcli connection add \
+type ethernet \
+con-name BRIDGED \
+ifname ens256 \
+ipv4.method manual \
+ipv4.addresses 10.#$34T#.1.6/24 \
+autoconnect yes
+
+nmcli connection up BRIDGED
+~~~
+
+<br>
+
+Verify:
+~~~
+!@NetOps-PH
+ip -4 addr
+
+nmcli connection show
+netstat -rn
+~~~
+
+<br>
+
+4. Routing
+~~~
+!@NetOps-PH
+ip route add 10.0.0.0/8 via 10.#$34T#.1.4 dev ens256
+ip route add 200.0.0.0/24 via 10.#$34T#.1.4 dev ens256
+ip route add 0.0.0.0/0 via 11.11.11.113 dev ens224
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Remote Access
+Connect to Management Interfaces of Devices
+NetOps-PH: 192.168.102.6
+UTM-PH: 192.168.102.11
+
+&nbsp;
+---
+&nbsp;
+
+### Step 7 - Exchange SSH Keys
+Delete existing SSH Keys
+~~~
+!@NetOps
+rm -rf /root/.ssh/known_hosts
+~~~
+
+<br>
+
+SSH to the ff devices:
+~~~
+!@NetOps
+ssh admin@10.#$34T#.1.2
+~~~
+
+<br>
+
+| IP                 | Device   |
+| ---                | ---      |
+| 10.#$34T#.1.2      | CoreTaas |
+| 10.#$34T#.1.4      | CoreBaba |
+| 10.#$34T#.100.8    | CUCM     |
+| 10.#$34T#.#$34T#.1 | EDGE     |
+
+<br>
+
+- Accept the keys
+- End the SSH session
+
+<br>
+<br>
+
+---
+&nbsp;
+
+## Cisco IOX
+Provide Internet for IOX Guestshell Containers
+
+!@NetOps
+conf t
+ ip domain lookup
  username admin priv 15 secret pass
+ enable secret pass
  line vty 0 14
   transport input all
   password pass
@@ -56,17 +282,125 @@ conf t
  int g1
   ip add 208.8.8.11 255.255.255.0
   no shut
+  desc OUTSIDE-INET
  int g2
   ip add 192.168.102.11 255.255.255.0
   no shut
- int g3
-  ip add 10.#$34T#.1.11 255.255.255.0
-  no shut
+  desc INSIDE-MGMT
  !
- ip http server
- ip http secure-server
- ip http authentication local
-  end
+ ip route 0.0.0.0 0.0.0.0 208.8.8.2
+ ip name-server 8.8.8.8 1.1.1.1
+ end
+
+&nbsp;
+---
+&nbsp;
+
+### Step 1 - Configure Cisco IOX
+Create a Virtual Port Group for IOX Container Network
+
+> [!NOTE]
+> app-vnic gateway0 is used by most apps.
+> Make sure appid is lowercase.
+
+~~~
+!@UTM-PH
+conf t
+ iox
+ !
+ interface VirtualPortGroup0
+  ip address 192.168.255.1 255.255.255.0
+  ip nat inside
+  exit
+ !
+ app-hosting appid guestshell
+  app-vnic gateway0 virtualportgroup 0 guest-interface 0
+   guest-ipaddress 192.168.255.11 netmask 255.255.255.0	
+  app-default-gateway 192.168.255.1 guest-interface 0 
+  name-server0 8.8.8.8
+  app-resource profile custom
+   cpu 1500 
+   memory 512
+   persist-disk 1000
+   end
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Step 2 - Enable App Instance
+~~~
+!@UTM-PH
+guestshell enable
+~~~
+
+<br>
+
+After the app is enabled:
+
+<br>
+
+Duplicate Remote connections
+- guestshell run bash
+~~~
+!@UTM-PH - bash shell
+cat /etc/os-release
+~~~
+
+<br>
+
+- guestshell run python3
+~~~
+!@UTM-PH - python shell
+import os
+print(os.version)
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Step 3 - Manage Linux Packages
+> [!IMPORTANT]
+> Update the repo stream link
+
+<br>
+
+~~~
+!@NetOps - bash shell
+sudo su
+cd /etc/yum.repos.d/
+sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+yum repolist
+yum install epel-release -y
+yum install nano -y
+~~~
+
+<br>
+
+__Install Applications__
+~~~
+!@NetOps - bash shell
+yum install nmap -y
+yum install bind bind-utils -y
+yum install python3 -y
+yum install python38 -y
+yum install git -y
+yum install net-tools
+yum install NetworkManager
+~~~
+
+<br>
+
+__Install Python Libraries__
+~~~
+!@NetOps - bash shell
+python3 -m pip install --upgrade pip
+python3 -m pip install cryptography
+python3 -m pip install netmiko
+python3 -m pip install "netmiko<4.0"
 ~~~
 
 <br>
@@ -75,7 +409,592 @@ conf t
 ---
 &nbsp;
 
+## Bash
+### Shell Scripts
+1. Output a basic Hello
+~~~
+!@UTM-PH - bash shell
+nano hello.sh
+
+///Edit hello.sh
+echo "hello world"
+///
+
+chmod 500 hello.sh
+./hello.sh
+~~~
+
+<br>
+
+2. Create Multi users
+~~~
+!@UTM-PH - bash shell
+nano add_user.sh
+
+///add_user.sh
+adduser m_user1
+echo "m_user1:C1sc0123" | chpasswd
+
+adduser m_user2
+echo "m_user2:C1sc0123" | chpasswd
+
+adduser m_user3
+echo "m_user3:C1sc0123" | chpasswd
+///
+
+chmod 500 add_user.sh
+./add_user.sh
+~~~
+
+<br>
+
+### Create a shell script to ping multiple sites and get their IP.
+~~~
+!@UTM-PH - bash shell
+cd /home/guestshell; nano icmp.sh
+~~~
+
+<br>
+
+icmp.sh Script
+~~~
+#!/bin/bash
+
+# Prompt User
+read -p "What hosts to ping? (Space-separated) " -a hosts
+
+for ip in "${hosts[@]}"
+do
+  (
+    if [[ "$1" == "-4" || -z "$1" ]]; then
+        result=$(ping -4 -c 1 "$ip" 2>/dev/null)
+    elif [[ "$1" == "-6" ]]; then
+        result=$(ping -6 -c 1 "$ip" 2>/dev/null)
+    fi
+
+    # Extract full IPv4 or IPv6 address
+    host_ip=$(echo "$result" | sed -n 's/^PING[^(]*(\([^)]*\)).*/\1/p')
+
+
+    if echo "$result" | grep -q "time="; then
+        echo "$ip ($host_ip) replied"
+    else
+        echo "$ip ($host_ip) failed"
+    fi
+  ) &
+done
+
+wait
+
+echo "All pings complete!"
+~~~
+
+<br>
+
+Make icmp.sh executable
+~~~
+!@UTM-PH - bash shell
+chmod +x icmp.sh
+~~~
+
+<br>
+
+Run the Bash Script
+~~~
+!@UTM-PH - bash shell
+./icmp.sh
+~~~
+
+<br>
+<br>
+
+---
+&nbsp;
+
+## Python
+### Manual Method
+~~~
+!@UTM-PH
+conf t
+ int loopback 1
+  ip add 1.1.1.1 255.255.255.255
+  description configured-manually
+ int loopback 2
+  ip add 2.2.2.2 255.255.255.255
+  description configured-manually
+  end
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### CLI Module
+Utilize CLI module (Cisco Proprietary Module) to send commands from guestshell to the cisco device.
+
+Send cisco show commands
+~~~
+!@UTM-PH - python shell
+import cli
+
+cli.executep('show ip int brief)
+~~~
+
+<br>
+
+Send Configurations
+~~~
+!@UTM-PH - python shell
+import cli
+
+commands = '''
+hostname UTM-PH-91
+'''
+
+cli.configurep(commands)
+~~~
+
+<br>
+
+~~~
+!@UTM-PH - python shell
+import cli
+
+commands = '''
+int loop 3
+ip add 3.3.3.3 255.255.255.255
+description via-python-cli
+int loop 4
+ip add 4.4.4.4 255.255.255.255
+description via-python-cli
+'''
+
+cli.configurep(commands)
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Netmiko
+https://ktbyers.github.io/netmiko/docs/netmiko/index.html
+
+<br>
+
+~~~
+!@UTM-PH - bash shell
+nano /home/guestshell/addloop.py
+~~~
+
+<br>
+
+addloop.py
+~~~ 
+from netmiko import ConnectHandler
+
+# Provide information about the host/s
+utm_ph = {
+    'device_type': 'cisco_ios_telnet',
+    'host': '192.168.255.1',
+    'username': 'admin',
+    'password': 'pass',
+    'secret': 'pass',
+    'port': 23
+}
+
+# Write the configurations
+utm_config = [
+    'interface loopback 5',
+    f'ip add 5.5.5.5 255.255.255.255',
+	'description via-netmiko',
+	'exit',
+	'interface loopback 6',
+    f'ip add 6.6.6.6 255.255.255.255',
+	'description via-netmiko',
+    'end'
+]
+
+# Connect to the host/s
+accesscli = ConnectHandler(**utm_ph)
+
+# Enable secret - Only IF Telnet Session
+accesscli.enable()
+
+# Send show command/s
+# show_ip = accesscli.send_command('show ip interface brief')
+# show_vlan = accesscli.send_command('show vlan brief')
+# show_mac = accesscli.send_command('show mac address-table')
+# show_cdp = accesscli.send_command('show cdp neighbor')
+
+# Push configurations
+cli_output = accesscli.send_config_set(utm_config)
+
+# Close connection
+accesscli.disconnect()
+
+print(cli_output)
+~~~
+
+<br>
+____________________
+### Create a Python script that will save the configurations of CoreTAAS, CoreBABA, CUCM, & EDGE
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<details>
+<summary>Show Answer</summary>
+
+~~~
+from netmiko import ConnectHandler
+
+list_of_device = input('What devices do you want to save configs? [ex. 10.12.1.2 10.12.1.4] ')
+list_of_device = list_of_device.split()
+
+### Device Information
+device_info = {
+    'device_type': 'cisco_ios_telnet',
+    'host': '10.91.1.2',
+    'username': 'admin',
+    'password': 'pass',
+    'secret': 'pass',
+    'port': 23
+}
+
+for host in list_of_device:
+    device_info['host'] = host
+    
+    try:
+        ### Connect to Device
+        access_cli = ConnectHandler(**device_info)
+        access_cli.enable()
+
+        output = access_cli.send_command('wr')
+        print(output)
+
+        ### Close Connection
+        access_cli.disconnect()
+        
+    except Exception as e:
+        print(f'''
+Failed to Connect to Device: {host}:
+Reason for failure: 
+{e}
+              ''')
+~~~
+
+</details>
+
+<br>
+
+### Modify VOIP Directory Numbers using Netmiko
+~~~
+import netmiko
+from netmiko import ConnectHandler
+
+def get_devices():
+    prompt = input('Which Monitors to be configured? [ex. 11,12,21]: ')
+    active_pc = prompt.split(',')
+    
+    return active_pc
+
+def get_configs(user_m, add_dn=''):
+    list_of_pcs = ['11','12','21','22','31','32','41','42','51','52','61','62','71','72','81','82','91','92']
+    configs = [
+        'telephony-service',
+        f'ip source-address 10.{user_m}.100.8 port 2000',
+        'ephone-dn 1',
+        f'number {add_dn}{user_m}11',
+        'ephone-dn 2',
+        f'number {add_dn}{user_m}22',
+        'ephone-dn 3',
+        f'number {add_dn}{user_m}33',
+        'ephone-dn 4',
+        f'number {add_dn}{user_m}44',
+        'ephone-dn 5',
+        f'number {add_dn}{user_m}55',
+        'ephone-dn 6',
+        f'number {add_dn}{user_m}66',
+        'ephone-dn 7',
+        f'number {add_dn}{user_m}77',
+        'ephone-dn 8',
+        f'number {add_dn}{user_m}88',
+        'ephone-dn 9',
+        f'number {add_dn}{user_m}99',
+        'ephone-dn 10',
+        f'number {add_dn}{user_m}89',
+        'ephone 1',
+        'button 1:1 2:2 3:3 4:4',
+        'restart',
+        'ephone 2',
+        'button 1:5 2:6 3:7 4:8',
+        'restart',
+        'exit',
+        'telephony-service',
+        'create cnf-files',
+        'exit'
+    ]
+    
+    for pc in list_of_pcs:
+        outgoing_peer = [
+            f'dial-peer voice {pc} Voip',
+            f'destination-pattern {add_dn}{pc}..',
+            f'session target ipv4:10.{pc}.100.8',
+            'codec g711ULAW'
+        ]
+        configs.extend(outgoing_peer)
+    
+    configs.append('end')
+    
+    return configs
+    
+def config_devices(user_m, add_dn='', terminal=False):
+    device_info = {
+        'device_type': 'cisco_ios_telnet',
+        'host': f'10.{user_m}.100.8',
+        'username': 'admin',
+        'password': 'pass',
+        'secret': 'pass'
+    }
+    
+    configs = get_configs(user_m, add_dn)
+        
+    access_cli = ConnectHandler(**device_info)
+    access_cli.enable()
+    output = access_cli.send_config_set(configs)
+    access_cli.disconnect()
+    
+    if terminal:
+        print(output)
+        
+
+
+if __name__ == '__main__':
+    import argparse
+    import multiprocessing
+
+    ### ARGUMENT PARSER
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--add_dn', type=str, help='enter additional dn digits')
+    args = parser.parse_args()
+    add_dn = args.add_dn
+
+    if not add_dn:
+        add_dn = ''
+    
+    process_list = []
+    device_list = get_devices()
+    
+    ### Use multiprocessing to configure multiple devices at the same time
+    for m in device_list:
+      proc = multiprocessing.Process(target=config_devices, args=[m, add_dn])
+      process_list.append(proc)
+    
+    ### run the function for each process
+    for i in process_list:
+        i.start()
+    
+    ### wait for all the process to finish before moving on to the next line
+    for i in process_list:
+        i.join()
+    
+    print('Configuration Complete')
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Upload config to TFTP Server
+~~~
+import multiprocessing
+from netmiko import ConnectHandler
+
+def get_ftp_server():
+    ftp_server = input('What is the IP Address of the FTP Server? [ex. 10.11.1.10] ')
+
+    return ftp_server
+
+def prompt_user():
+    device_list = input('Which hosts to save configs? [ex. 10.11.1.2,10.11.1.4] ')
+    device_list = device_list.split(',')
+    
+    total_device = []
+    for devices in device_list:
+        device_info = {
+            'device_type': 'cisco_ios_telnet',
+            'host': devices,
+            'username': 'admin',
+            'password': 'pass',
+            'secret': 'pass'
+        }
+        total_device.append(device_info)
+
+    return total_device
+
+def save_ftp(ftp_server, device_info):
+    try: 
+        access_cli = ConnectHandler(**device_info)
+        access_cli.enable()
+
+        command = f'copy run ftp'
+        filename = f'{device_info["host"]}-configs.cfg'
+        output = access_cli.send_command_timing(command)
+
+        if "Address or name of remote host" in output:
+            output += access_cli.send_command_timing(ftp_server)
+        if "Destination filename" in output:
+            output += access_cli.send_command_timing(filename)
+        
+        access_cli.disconnect()
+        print(f'Save Configurations for {device_info["host"]}, Completed!!')
+
+    except Exception as e:
+        print(f'''
+ERROR: An unexpected error occurred with device {device_info['host']}: 
+        
+{str(e)}
+
+''')
+
+if __name__ == '__main__':
+    ftp_server = get_ftp_server()
+    device_list = prompt_user()
+    process_list = []
+
+    for devices in device_list:
+        proc = multiprocessing.Process(target=save_ftp, args=[ftp_server, devices])
+        process_list.append(proc)
+    
+    for i in process_list:
+        i.start()
+    
+    for i in process_list:
+        i.join()
+    
+    print('Configuration Complete')
+~~~
+
+&nbsp;
+---
+&nbsp;
+
+### Create a python script to save and send configs via FTP on a 1 min Timer
+~~~
+from netmiko import ConnectHandler
+import time
+
+ftp_server = input('FTP Server IP: ')
+filename = input('Filename: ')
+save_timer = input('Save Interval: ')
+max_save = int(input('Maximum Save: '))
+command = f'copy run tftp'
+
+
+devices = input('Host Addresses [ex. 10.1.1.1 10.2.2.2]: ')
+devices = devices.split()
+device_info = {
+    'device_type': 'cisco_ios_telnet',
+    'host': '192.168.255.1',
+    'username': 'admin',
+    'password': 'pass',
+    'secret': 'pass',
+    'port': 23
+}
+
+while max_save > 0:
+    while True:
+        for host in devices:
+            try:
+                access_cli = ConnectHandler(**device_info)
+                access_cli.enable()
+            
+                output = access_cli.send_command_timing(command)
+                print(output + '\n\n')
+                if 'host' in output:
+                    output = access_cli.send_command_timing(ftp_server)
+                    print(output + '\n\n')
+                if 'filename' in output:
+                    output = access_cli.send_command_timing(filename)
+                    print(output + '\n\n')
+
+                access_cli.disconnect()
+
+            except Exception as fail:
+                print(f'''
+Error on host {host}: 
+Error Occured: {fail}
+''')
+            max_save -= 1
+        
+        time.sleep(save_interval)
+~~~
+
+<br>
+<br>
+
+---
+&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## AUTOMATION
+
+
 ### Shell Scripts
 1. Output a basic Hello
 ~~~
@@ -112,23 +1031,43 @@ chmod 500 add_user.sh
 ./add_user.sh
 ~~~
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <br>
 <br>
 
 ---
 &nbsp;
 
-### Python
-*Demo: Day1 via Python (Ex 01 - Day1)*
-
-<br>
-
-> Rivan_Day4 / Automation / _Python / Ex 01 - Day1 / run-all /
-
-<br>
-<br>
-
-### TASK 01: Create a Python script that will apply a loopback IP (1.1.1.1/32) to CoreTaas
+## Python
+### Create a Python script that will apply a loopback IP (1.1.1.1/32) to CoreTaas
 <br>
 <br>
 <br>

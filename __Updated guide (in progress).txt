@@ -910,8 +910,20 @@ After the app is enabled:
 <br>
 
 Duplicate Remote connections
-- guestshell run bash
+- guestshell run bash  
+~~~
+!@UTM-PH - bash shell
+cat /etc/os-release
+~~~
+
+<br>
+
 - guestshell run python3
+~~~
+!@UTM-PH python shell
+import sys
+print(sys.version)
+~~~
 
 &nbsp;
 ---
@@ -924,7 +936,7 @@ Duplicate Remote connections
 <br>
 
 ~~~
-!@NetOps - bash shell
+!@UTM-PH - bash shell
 sudo su
 cd /etc/yum.repos.d/
 sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
@@ -938,7 +950,7 @@ yum install nano -y
 
 __Install Applications__
 ~~~
-!@NetOps - bash shell
+!@UTM-PH - bash shell
 yum install nmap -y
 yum install bind bind-utils -y
 yum install python3 -y
@@ -952,7 +964,7 @@ yum install NetworkManager
 
 __Install Python Libraries__
 ~~~
-!@NetOps - bash shell
+!@UTM-PH - bash shell
 python3 -m pip install --upgrade pip
 python3 -m pip install cryptography
 python3 -m pip install netmiko

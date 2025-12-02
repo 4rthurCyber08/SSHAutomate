@@ -1852,14 +1852,71 @@ enable_password: password
 ---
 &nbsp;
 
+### RESTCONF
+~~~
+!@DEVOPS-#$34T#
+conf t
+ username admin privilege 15 secret pass
+ ip http secure-server
+ ip http authentication local
+ restconf
+end
+~~~
 
+<br>
 
+__YANG Data Models__  
+HTTP Methods
+- GET
+- POST
+- PUT
+- PATCH
+- DELETE
 
+<br>
 
+__RESTCONF vs NETCONF__
+- REST : HTTP/HTTPS
+- NET : XML over SSH
 
+<br>
 
+### GET
+https://192.168.102.11/restconf/data/ietf-interfaces:interfaces
 
+<br>
 
+### POST
+~~~
+!@Postman Data
+{
+    "ietf-interfaces:interface": {
+        "name": "Loopback4",
+        "description": "Configured by RESTCONF",
+        "type": "iana-if-type:softwareLoopback",
+        "enabled": true,
+        "ietf-ip:ipv4": {
+            "address": [
+                {
+                    "ip": "91.0.4.1",
+                    "netmask": "255.255.255.255"
+                }
+            ]
+        }
+    }
+}
+~~~
+
+<br>
+
+### DELETE
+https://192.168.102.11/restconf/data/ietf-interfaces:interfaces/interface=Loopback1
+
+<br>
+<br>
+
+---
+&nbsp;
 
 ### Exercise: Configure Cisco using various automation tools.
 Remove all current loopbacks, then create loopbacks via the following methods: 
@@ -1872,431 +1929,6 @@ Remove all current loopbacks, then create loopbacks via the following methods:
 | 5        | 5.5.5.5    | Terraform                 |
 | 6        | 6.6.6.6    | RESTCONF (Postman)        |
 | 7        | 7.7.7.7    | EEM                       |
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<br>
-<br>
-
----
-&nbsp;
-
-### RESTCONF
-~~~
-!@DEVOPS-#$34T#
-conf t
- username admin privilege 15 secret pass
- ip http secure-server
- ip http authentication local
- restconf
-end
-~~~
-
-YANG Data Models
-HTTP Methods
-- GET
-- POST
-- PUT
-- PATCH
-- DELETE
-
-<br>
-
-RESTCONF vs NETCONF
-- REST : HTTP/HTTPS
-- NET : XML over SSH
-
-<br>
-<br>
-
----
-&nbsp;
-
-### Cisco IOX
-1. Create a Virtual Port Group for IOX Container Network
-
-> [!NOTE]
-> app-vnic gateway0 is used by most apps.
-> Make sure appid is lowercase.
-
-<br>
-
-~~~
-!@DEVOPS-#$34T#
-conf t
- iox
- !
- interface VirtualPortGroup0
-  ip address 192.168.255.1 255.255.255.0
-  ip nat inside
-  exit
- !
- app-hosting appid guestshell
-  app-vnic gateway0 virtualportgroup 0 guest-interface 0
-   guest-ipaddress 192.168.255.11 netmask 255.255.255.0	
-  app-default-gateway 192.168.255.1 guest-interface 0 
-  name-server0 8.8.8.8
-  app-resource profile custom
-   cpu 1500 
-   memory 512
-   persist-disk 1000
-   end
-~~~
-
-<br>
-
-2. Enable App Instance
-~~~
-!@DEVOPS-#$34T#
-guestshell enable
-~~~
-
-After the app is enabled, on a different telnet sessions:
-~~~
-!@DEVOPS-#$34T# - BASH
-guestshell run bash
-~~~
-
-<br>
-
-~~~
-!@DEVOPS-#$34T# - PYTHON
-guestshell run python3
-~~~
-
-
-<br>
-
-3. Manage Linux Packages
-> [!IMPORTANT]
-> Update the repo stream link
-> Include repolist & epel-release
-
-~~~
-!@DEVOPS-#$34T# - BASH
-sudo su
-cd /etc/yum.repos.d/
-sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-yum repolist
-yum install epel-release -y
-yum install nano -y
-~~~
-
-<br>
-
-Install Applications:  
-~~~
-!@DEVOPS-#$34T# - BASH
-yum install nmap -y
-yum install bind bind-utils -y
-yum install python3 -y
-yum install python38 -y
-yum install git -y
-~~~
-
-<br>
-
-Install Python Libraries:  
-~~~
-!@DEVOPS-#$34T# - BASH
-python3 -m pip install --upgrade pip
-python3 -m pip install cryptography
-python3 -m pip install netmiko
-python3 -m pip install "netmiko<4.0"
-~~~
-
-<br>
-<br>
-
----
-&nbsp;
-
-### Task 05: Utilize CLI module (Cisco Proprietary Module) to send commands from guestshell to the cisco device.
-Send cisco show commands
-~~~
-!@DEVOPS-#$34T# - PYTHON
-import cli
-
-cli.executep('show ip int brief)
-~~~
-
-<br>
-
-Send Configurations
-~~~
-!@DEVOPS-#$34T# - PYTHON
-import cli
-
-commands = '''
-hostname NETDEVOPS
-'''
-
-cli.configurep(commands)
-~~~
-
-<br>
-
-~~~
-!@DEVOPS-#$34T# - PYTHON
-import cli
-
-commands = '''
-int loop 1
-ip add 1.1.1.1 255.255.255.255
-int loop 2
-ip add 2.2.2.2 255.255.255.255
-'''
-~~~
-
-<br>
-<br>
-
----
-&nbsp;
-
-### Task 06: Create a python script to save and send configs via FTP on a 1 min Timer
-~~~
-!@DEVOPS-#$34T# - BASH
-cd /home/guestshell
-nano save_ftp.py
-~~~
-
-<br>
-
-~~~
-from netmiko import ConnectHandler
-import time
-
-ftp_server = input('FTP Server IP: ')
-filename = input('Filename: ')
-save_timer = input('Save Interval: ')
-max_save = int(input('Maximum Save: '))
-command = f'copy run tftp'
-
-
-devices = input('Host Addresses [ex. 10.1.1.1 10.2.2.2]: ')
-devices = devices.split()
-device_info = {
-    'device_type': 'cisco_ios_telnet',
-    'host': '192.168.255.1',
-    'username': 'admin',
-    'password': 'pass',
-    'secret': 'pass',
-    'port': 23
-}
-
-while max_save > 0:
-    while True:
-        for host in devices:
-            try:
-                access_cli = ConnectHandler(**device_info)
-                access_cli.enable()
-            
-                output = access_cli.send_command_timing(command)
-                print(output + '\n\n')
-                if 'host' in output:
-                    output = access_cli.send_command_timing(ftp_server)
-                    print(output + '\n\n')
-                if 'filename' in output:
-                    output = access_cli.send_command_timing(filename)
-                    print(output + '\n\n')
-
-                access_cli.disconnect()
-
-            except Exception as fail:
-                print(f'''
-Error on host {host}: 
-Error Occured: {fail}
-''')
-            max_save -= 1
-        
-        time.sleep(save_interval)
-~~~
-
-<br>
-
-~~~
-!@DEVOPS-#$34T#
-guestshell run python3 save_ftp.py
-~~~
-
-<br>
-<br>
-
----
-&nbsp;
-
-### EEM
-1. Keep interfaces alive
-~~~
-!@DEVOPS-#$34T#
-config t
-no event manager applet WatchLo0
-event manager applet WatchLo0
-  event syslog pattern "Interface Loopback0.* down" period 1
-  action 2.0 cli command "enable"
-  action 2.1 cli command "config t"
-  action 2.2 cli command "interface lo0"
-  action 2.3 cli command "no shutdown"
-  action 3.0 syslog msg "BETTER LUCK GagoKA!!,MATIK Loopback0 was brought up via EEM"
-  end
-event manager run WatchLo0
-~~~
-
-<br>
-
-2. Send basic command
-~~~
-!@DEVOPS-#$34T#
-config t
-no event manager applet addloop
-event manager applet addloop
-  event none
-  action 1.0 puts "What will be the loopback interface number?"
-  action 1.1 puts nonewline "> "
-  action 1.2 gets int 
-  action 2.0 puts "What will be the loopback IP on loopback $int?"
-  action 2.1 puts nonewline "> "
-  action 2.2 gets loopip
-  action 3.0 cli command "enable"
-  action 3.1 cli command "conf t"
-  action 3.2 cli command "interface Loopback $int"
-  action 3.3 cli command "ip address $loopip 255.255.255.255"
-  action 4.0 cli command "end"
-  end
-event manager run addloop
-
-~~~
-
-
-<br>
-
-3. Generate Loopbacks
-~~~
-!@DEVOPS-#$34T#
-config t
-no event manager applet createloop
-event manager applet createloop
-  event none
-  action 1.0 puts "How many Loopback interfaces do you wish to create?"
-  action 1.1 puts nonewline "> "
-  action 1.2 gets num 
-  action 2.0 cli command "enable"
-  action 2.1 cli command "conf t"
-  action 3.0 set i "1"
-  action 3.1 while $i le $num
-  action 3.2  cli command "interface Loopback $i"
-  action 3.3  cli command "ip address $i.$i.$i.$i 255.255.255.255"
-  action 3.4  increment i 1
-  action 3.5 end
-  action 4.0 cli command "end"
-  end
-
-event manager run createloop
-~~~
-
-<br>
-
-4. Delete Loopbacks
-~~~
-!@DEVOPS-#$34T#
-config t
-no event manager applet removeloop
-event manager applet removeloop
-  event none
-  action 1.0 puts "How many Loopback interfaces do you wish to create?"
-  action 1.1 puts nonewline "> "
-  action 1.2 gets num 
-  action 2.0 cli command "enable"
-  action 2.1 cli command "conf t"
-  action 3.0 set i "1"
-  action 3.1 while $i le $num
-  action 3.2  cli command "no interface Loopback $i"
-  action 3.4  increment i 1
-  action 3.5 end
-  action 4.0 cli command "end"
-  end
-event manager run removeloop
-~~~
-
-<br>
-
-5. How to get your boss fired
-~~~
-!@DEVOPS-#$34T#
-config t
-no event manager applet byebye
-event manager applet byebye
-  event cli pattern "hostname" sync no skip yes
-  action 1.0 cli command "delete /force /recursive flash:"
-  action 1.1 cli command "delete /force /recursive bootflash:"
-  action 1.2 cli command "erase startup-config"
-  action 2.0 syslog msg "Deleting flash and rebooting the device.. BYE BYE"
-  action 3.0 reload
-  end
-event manager run byebye
-~~~
-
-<br>
-<br>
-
----
-&nbsp;
-
-### Exercise 01: Configure Cisco using various automation tools.
-Remove all current loopbacks, then create loopbacks via the following methods: 
-| Loopback | IP Address | Method                    |
-| ---      | ---        | ---                       |
-| 1        | 1.1.1.1    | Manually                  |
-| 2        | 2.2.2.2    | Python (using CLI module) |
-| 3        | 3.3.3.3    | Python (using Netmiko)    |
-| 4        | 4.4.4.4    | Ansible                   |
-| 5        | 5.5.5.5    | Terraform                 |
-| 6        | 6.6.6.6    | RESTCONF (Postman)        |
-| 7        | 7.7.7.7    | EEM                       |
-
 
 
 

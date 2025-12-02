@@ -637,6 +637,82 @@ print(cli_output)
 
 <br>
 
+### Create a Python script that will configure Loopback 7 on UTM-PH
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<details>
+<summary>Show Answer</summary>
+
+~~~
+from netmiko import ConnectHandler
+
+# Device Info
+device_info = {
+    'device_type': 'cisco_ios_telnet',
+    'host': '192.168.102.11',
+    'username': 'admin',
+    'password': 'pass',
+    'secret': 'pass',
+    'port': 23
+}
+
+# Config
+commands = [
+    'int loopback 7',
+    'ip add 7.7.7.7 255.255.255.255',
+    'description made-by-me',
+    'end'
+]
+
+# Push 
+access_cli = ConnectHandler(**device_info)
+access_cli.enable()
+show_ip = access_cli.send_command('show ip int brief')
+print(show_ip)
+print('\n\n\n')
+access_cli.send_config_set(commands)
+print('\n\n\n')
+show_ip = access_cli.send_command('show ip int brief')
+print(show_ip)
+
+access_cli.disconnect()
+~~~
+
+</details>
+
+<br>
+
 ### Create a Python script that will save the configurations of CoreTAAS, CoreBABA, CUCM, & EDGE
 <br>
 <br>
@@ -908,7 +984,7 @@ if __name__ == '__main__':
 ---
 &nbsp;
 
-### Create a python script to save and send configs via FTP on a 1 min Timer
+### Create a python script to save and send configs via TFTP on a 1 min Timer
 ~~~
 from netmiko import ConnectHandler
 import time
@@ -944,7 +1020,7 @@ while max_save > 0:
                     output = access_cli.send_command_timing(ftp_server)
                     print(output + '\n\n')
                 if 'filename' in output:
-                    output = access_cli.send_command_timing(filename)
+                    output = access_cli.send_command_timing(f'{filename}-{host}')
                     print(output + '\n\n')
 
                 access_cli.disconnect()
@@ -956,7 +1032,7 @@ Error Occured: {fail}
 ''')
             max_save -= 1
         
-        time.sleep(save_interval)
+        time.sleep(int(save_timer))
 ~~~
 
 <br>
@@ -979,6 +1055,8 @@ conf t
 <br>
 
 ### 1. Keep interfaces alive
+Duplicate Session, Terminal Monitoring
+
 ~~~
 !@UTM-PH-#$34T#
 config t
@@ -989,14 +1067,14 @@ event manager applet WatchLo0
   action 2.1 cli command "config t"
   action 2.2 cli command "interface lo0"
   action 2.3 cli command "no shutdown"
-  action 3.0 syslog msg "BETTER LUCK GagoKA!!,MATIK Loopback0 was brought up via EEM"
+  action 3.0 syslog msg "BAWAL SHUTDOWN, Loopback0 was brought up via EEM"
   end
 event manager run WatchLo0
 ~~~
 
 <br>
 
-### 2. Send basic command (loop 7 & 8)
+### 2. Send basic command (loop 8 & 9)
 ~~~
 !@UTM-PH-#$34T#
 config t
@@ -1016,6 +1094,7 @@ event manager applet addloop
   action 3.4 cli command "desc via-EEM-applet"
   action 4.0 cli command "end"
   end
+
 event manager run addloop
 ~~~
 
@@ -1038,6 +1117,7 @@ event manager applet createloop
   action 3.1 while $i le $num
   action 3.2  cli command "interface Loopback $i"
   action 3.3  cli command "ip address $i.$i.$i.$i 255.255.255.255"
+  action 3.3  cli command "desc overwritten-by-EEM"
   action 3.4  increment i 1
   action 3.5 end
   action 4.0 cli command "end"

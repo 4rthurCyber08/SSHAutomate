@@ -1663,7 +1663,7 @@ ansible-playbook -i real_devices.ini playbooks/deploy_int.yml
 ---
 &nbsp;
 
-### Task 04: Create add a template to create DHCP Pools.
+### Create add a template to create DHCP Pools.
 
 __Templates__
 ansible_project/templates/dhcp_scope.j2
@@ -1731,7 +1731,7 @@ ansible_project/playbooks/deploy_dhcp.yml
 Enable RESTCONF
 
 ~~~
-!@DEVOPS-#$34T#
+!@UTM-PH-#$34T#
 conf t
  username admin privilege 15 secret pass
  ip http secure-server
@@ -1744,6 +1744,13 @@ end
 
 __HCL (.tf File)__
 ~~~
+!@NetOps-PH
+mkdir /etc/terraform;cd /etc/terraform;nano /etc/terraform/add_loop.tf
+~~~
+
+<br>
+
+~~~
 terraform {
   required_providers {
     iosxe = {
@@ -1755,14 +1762,14 @@ terraform {
 provider "iosxe" {
   username = "admin"
   password = "pass"
-  url      = "https://10.11.11.1"
+  url      = "https://11.11.11.113"
 }
 
 resource "iosxe_interface_loopback" "example" {
-  name               = 200
+  name               = 3
   description        = "My First TF Script Attempt"
   shutdown           = false
-  ipv4_address       = "2.2.2.2"
+  ipv4_address       = "#$34T#.0.3.1"
   ipv4_address_mask  = "255.255.255.255"
 }
 ~~~

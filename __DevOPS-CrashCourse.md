@@ -1174,65 +1174,14 @@ event manager run byebye
 ---
 &nbsp;
 
-## Configuration and Infrastructure Management Tools. (Ansible, Terraform, Puppet, & Chef)
-
-
-
-
-### Exercise: Configure Cisco using various automation tools.
+### Exercise: Configure Cisco using various automation methods.
 Remove all current loopbacks, then create loopbacks via the following methods: 
 | Loopback | IP Address | Method                    |
 | ---      | ---        | ---                       |
 | 1        | 1.1.1.1    | Manually                  |
 | 2        | 2.2.2.2    | Python (using CLI module) |
 | 3        | 3.3.3.3    | Python (using Netmiko)    |
-| 4        | 4.4.4.4    | Ansible                   |
-| 5        | 5.5.5.5    | Terraform                 |
-| 6        | 6.6.6.6    | RESTCONF (Postman)        |
-| 7        | 7.7.7.7    | EEM                       |
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+| 4        | 4.4.4.4    | EEM                       |
 
 <br>
 <br>
@@ -1243,24 +1192,26 @@ Remove all current loopbacks, then create loopbacks via the following methods:
 ## Configuration and Infrastructure Management Tools. (Ansible, Terraform, Puppet, & Chef)
 Setup 
   - NetOps:
-    - Name: NetOps
-    - NetAdapter: NAT
-    - NetAdapter 2: Bridged (Replicate)
-    - NetAdapter 3: VMnet4
-    - NetAdapter 4: VMNet4
+    - Name: NetOps-PH
+    - NetAdapter: VMNet1
+    - NetAdapter 2: VMNet2
+    - NetAdapter 3: VMnet3
+    - NetAdapter 4: Bridged (Replicate)
 
 <br>
 
 ~~~
-!@NetOps
+!@NetOps-PH
 nmcli connection add \
 type ethernet \
-con-name tunaynalan \
-ifname ens192 \
+con-name BRIDGED \
+ifname ens256 \
+ipv4.method manual \
 ipv4.addresses 10.#$34T#.1.6/24 \
 autoconnect yes
 
-nmcli connection up tunaynalan
+nmcli connection up BRIDGED
+
 route add 10.0.0.0/8 via 10.#$34T#.1.4
 route add 200.0.0.0/24 via 10.#$34T#.1.4
 ~~~
@@ -1269,11 +1220,10 @@ route add 200.0.0.0/24 via 10.#$34T#.1.4
 
 ~~~
 !@NetOps
-ifconfig ens192 10.#$34T#.1.6 netmask 255.255.255.0 up
+ifconfig ens256 10.#$34T#.1.6 netmask 255.255.255.0 up
 route add 10.0.0.0/8 via 10.#$34T#.1.4
 route add 200.0.0.0/24 via 10.#$34T#.1.4
 ~~~
-
 
 &nbsp;
 ---
@@ -1384,7 +1334,7 @@ __ansible.cfg__
 ---
 &nbsp;
 
-### Task 03: Create an Ansible script to add loopback addresses to Cisco Devices.
+### Task: Create an Ansible script to add loopback addresses to Cisco Devices.
 *What if they have different credentials?*
 
 ~~~
@@ -1430,12 +1380,11 @@ __Playbook (add_loop.yml)__
 
 __hosts (Inventory)__
 ~~~
-[CoreBaba]
-10.11.1.4
+[realdevices]
+ctaas ansible_host=10.#$34T#.1.2 ansible_user=admin ansible_password=pass
+cbaba ansible_host=10.#$34T#.1.4 ansible_user=rivan ansible_password=C1sc0123
 
-[CoreBaba:vars]
-ansible_user=admin
-ansible_password=C1sc0123
+[realdevices:vars]
 ansible_connection=network_cli
 ansible_network_os=ios
 ~~~
@@ -1479,15 +1428,15 @@ ansible-network-project/
 Setup the project workspace:
 ~~~
 !@NetOps
-mkdir -p /etc/ansible/ansible_project/{inventory,host_vars,playbooks,templates,roles}
+mkdir -p /etc/ansible/ansible_project/{inventory,host_vars,group_vars,playbooks,templates,roles};cd /etc/ansible/ansible_project
 ~~~
 
 <br>
 
 ~~~
 /etc/ansible/ansible_project/
-    ├── inventory/
-    │   └── hosts
+    ├── hosts
+    │   
     │
     ├── group_vars/
     │   └── ios.yml
@@ -1509,13 +1458,20 @@ mkdir -p /etc/ansible/ansible_project/{inventory,host_vars,playbooks,templates,r
 ~~~
 
 __Hosts__  
-ansible_project/inventory/real_devices.ini
+~~~
+!@NetOps-PH
+nano real_devices.ini
+~~~
+
+<br>
+
 ~~~
 [real_cisco]
 CTAAS ansible_host=10.#$34T#.1.2
 CBABA ansible_host=10.#$34T#.1.4
 CUCM ansible_host=10.#$34T#.100.8
 EDGE ansible_host=10.#$34T#.#$34T#.1
+UTM-PH ansible_host=11.11.11.113
 
 [real_cisco:vars]
 ansible_connection=network_cli
@@ -1528,77 +1484,125 @@ ansible_network_os=ios
 <br>
 
 __Host Variables__  
-ansible_project/host_vars/CTAAS.yml  
 ~~~
-### CoreTAAS Credentials
-ansible_user=admin
-ansible_password=pass
-ansible_become_password=pass
+!@NetOps-PH
+nano host_vars/CTAAS.yml  
 ~~~
 
 <br>
 
-ansible_project/host_vars/CBABA.yml  
+~~~
+### CoreTAAS Credentials
+ansible_user: admin
+ansible_password: pass
+ansible_become_password: pass
+~~~
+
+<br>
+
+~~~
+!@NetOps-PH
+nano host_vars/CBABA.yml  
+~~~
+
+<br>
+
 ~~~
 ### CoreBABA Credentials
-ansible_user=rivan
-ansible_password=C1sc0123
-ansible_become_password=pass
+ansible_user: rivan
+ansible_password: C1sc0123
+ansible_become_password: pass
+~~~
+
+<br>
+
+~~~
+!@NetOps-PH
+nano host_vars/UTM-PH.yml  
+~~~
+
+<br>
+
+~~~
+### UTM-PH Credentials
+ansible_user: admin
+ansible_password: pass
+ansible_become_password: pass
 ~~~
 
 <br>
 
 __Templates__
-ansible_project/templates/interfaces.j2
+~~~
+!@NetOps-PH
+nano templates/interfaces.j2
+~~~
+
+<br>
+
 ~~~
 {% for intlist in interfaces %}
 interface {{ intlist.name }}
-  description {{ intlist.desc }}
-  ip address {{ intlist.ip }} {{ intlist.mask }}
-  no shutdown
+ description {{ intlist.desc }}
+ ip address {{ intlist.ip }} {{ intlist.mask }}
+ no shutdown
 {% endfor %}
 ~~~
 
 <br>
 
-ansible_project/playbooks/deploy_int.yml
+~~~
+!@NetOps-PH
+nano playbooks/deploy_int.yml
+~~~
+
+<br>
+
 ~~~
 - name: Apply interface configurations
   hosts: real_cisco
   gather_facts: no
 
   tasks:
-    - name: Load Variables for devices
-      include_vars: 
-        - '../host_vars/CTAAS.yml'
-        - '../host_vars/CBABA.yml'
-
     - name: Render and push interface configs
       cisco.ios.ios_config:
-        src: templates/interfaces.j2
+        src: '../templates/interfaces.j2'
 ~~~
 
 <br>
 
-__Adding Host Values__
-ansible_project/host_vars/CTAAS.yml  
+__Adding Group Values__
+~~~
+!@NetOps-PH
+nano group_vars/real_cisco.yml  
+~~~
+
+<br>
+
 ~~~
 ### For adding loopbacks
 interfaces:
   - name: Loopback1
     desc: Made via Ansible
-    ip: #$34T#.0.1.2
+    ip: #$34T#.0.1.1
     mask: 255.255.255.255
 
   - name: Loopback2
     desc: Made via Ansible
-    ip: #$34T#.0.2.2
+    ip: #$34T#.0.2.1
     mask: 255.255.255.255
 ~~~
 
 <br>
 
-ansible_project/host_vars/CBABA.yml  
+__Adding Host Values__
+~~~
+!@NetOps-PH
+nano host_vars/CBABA.yml  
+~~~
+
+<br>
+
 ~~~
 ### For adding loopbacks
 interfaces:
@@ -1610,6 +1614,29 @@ interfaces:
   - name: Loopback2
     desc: Made via Ansible
     ip: #$34T#.0.2.4
+    mask: 255.255.255.255
+~~~
+
+<br>
+
+~~~
+!@NetOps-PH
+nano host_vars/CTAAS.yml  
+~~~
+
+<br>
+
+~~~
+### For adding loopbacks
+interfaces:
+  - name: Loopback1
+    desc: Made via Ansible
+    ip: #$34T#.0.1.2
+    mask: 255.255.255.255
+
+  - name: Loopback2
+    desc: Made via Ansible
+    ip: #$34T#.0.2.2
     mask: 255.255.255.255
 ~~~
 
@@ -1627,7 +1654,7 @@ ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
 __Execute the script__
 ~~~
 !@NetOps
-ansible-playbook -i inventory/real_devices.ini playbooks/deply_dhcp.yml
+ansible-playbook -i real_devices.ini playbooks/deploy_int.yml 
 ~~~
 
 <br>
@@ -1811,6 +1838,76 @@ user: admin
 password: password
 enable_password: password
 ~~~
+
+<br>
+<br>
+
+---
+&nbsp;
+
+
+
+
+
+
+
+
+
+
+### Exercise: Configure Cisco using various automation tools.
+Remove all current loopbacks, then create loopbacks via the following methods: 
+| Loopback | IP Address | Method                    |
+| ---      | ---        | ---                       |
+| 1        | 1.1.1.1    | Manually                  |
+| 2        | 2.2.2.2    | Python (using CLI module) |
+| 3        | 3.3.3.3    | Python (using Netmiko)    |
+| 4        | 4.4.4.4    | Ansible                   |
+| 5        | 5.5.5.5    | Terraform                 |
+| 6        | 6.6.6.6    | RESTCONF (Postman)        |
+| 7        | 7.7.7.7    | EEM                       |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <br>
 <br>

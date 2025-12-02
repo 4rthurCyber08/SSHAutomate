@@ -1135,7 +1135,7 @@ config t
 no event manager applet removeloop
 event manager applet removeloop
   event none
-  action 1.0 puts "How many Loopback interfaces do you wish to create?"
+  action 1.0 puts "How many Loopback interfaces do you wish to delete?"
   action 1.1 puts nonewline "> "
   action 1.2 gets num 
   action 2.0 cli command "enable"

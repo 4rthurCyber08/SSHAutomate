@@ -268,7 +268,7 @@ ssh admin@10.#$34T#.1.2
 ## Cisco IOX
 Provide Internet for IOX Guestshell Containers
 
-!@NetOps
+!@UTM-PH
 conf t
  ip domain lookup
  username admin priv 15 secret pass
@@ -722,8 +722,8 @@ import netmiko
 from netmiko import ConnectHandler
 
 def get_devices():
-    prompt = input('Which Monitors to be configured? [ex. 11,12,21]: ')
-    active_pc = prompt.split(',')
+    prompt = input('Which Monitors to be configured? [ex. 11 12 21]: ')
+    active_pc = prompt.split()
     
     return active_pc
 
@@ -834,7 +834,7 @@ if __name__ == '__main__':
 ---
 &nbsp;
 
-### Upload config to TFTP Server
+### Upload config to FTP Server
 ~~~
 import multiprocessing
 from netmiko import ConnectHandler
@@ -845,8 +845,8 @@ def get_ftp_server():
     return ftp_server
 
 def prompt_user():
-    device_list = input('Which hosts to save configs? [ex. 10.11.1.2,10.11.1.4] ')
-    device_list = device_list.split(',')
+    device_list = input('Which hosts to save configs? [ex. 10.11.1.2 10.11.1.4] ')
+    device_list = device_list.split()
     
     total_device = []
     for devices in device_list:

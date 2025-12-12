@@ -24,6 +24,31 @@ def eraseDevices(monitor):
         
         try:
             access_cli = ConnectHandler(**device_info)
+            access_cli.enable()
+            
+            print(f'Accessing {device_info["host"]}... ')
+            
+            output = access_cli.send_command_timing('write erase')
+            if 'Continue?' in output:
+                output += access_cli.send_command_timing('\n')
+            
+            if device == 'coretaas' or device == 'corebaba':
+                output += access_cli.send_command_timing('delete vlan.dat')
+                if '[vlan.dat]?' in output:
+                    output += access_cli.send_command_timing('\n')
+                    if 'flash:vlan.dat?' in output:
+                        output += access_cli.send_command_timing('\n')
+                        
+            output = access_cli.send_command_timing('reload')
+            if 'Save?' in output:
+                output += access_cli.send_command_timing('No')
+            if 'Proceed with reload?' in output:
+                output += access_cli.send_command_timing('\n')
+            
+            print(f'{device_info['host']}: {output}')
+            
+            access_cli.disconnect()
+            print(f'\n\n Closing connection to {device_info['host']} \n')
         except Exception as e:
             print(f'''
 Failed to Connect to Device: {host}:
@@ -31,33 +56,9 @@ Reason for failure:
 {e}
 
             ''')
-            return None
-            
-        access_cli.enable()
+            continue
+
         
-        print(f'Accessing {device_info["host"]}... ')
-        
-        output = access_cli.send_command_timing('write erase')
-        if 'Continue?' in output:
-            output += access_cli.send_command_timing('\n')
-        
-        if device == 'coretaas' or device == 'corebaba':
-            output += access_cli.send_command_timing('delete vlan.dat')
-            if '[vlan.dat]?' in output:
-                output += access_cli.send_command_timing('\n')
-                if 'flash:vlan.dat?' in output:
-                    output += access_cli.send_command_timing('\n')
-                    
-        output = access_cli.send_command_timing('reload')
-        if 'Save?' in output:
-            output += access_cli.send_command_timing('No')
-        if 'Proceed with reload?' in output:
-            output += access_cli.send_command_timing('\n')
-        
-        print(f'{device_info['host']}: {output}')
-        
-        access_cli.disconnect()
-        print(f'\n\n Closing connection to {device_info['host']} \n')
     
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ def eraseDevices(monitor):
     device_order = ['coretaas', 'cucm', 'corebaba', 'edge']
     device_info = {
         'device_type': 'cisco_ios_telnet',
-        'host': f'10.{monitor}.1.2',
+        'host': '192.168.1.1',
         'username': 'admin',
         'password': 'pass',
         'secret': 'pass',
@@ -22,6 +22,7 @@ def eraseDevices(monitor):
         elif device == 'edge':
             device_info['host'] = f'200.0.0.{monitor}'
         
+        print(device_info['host'])
         try:
             access_cli = ConnectHandler(**device_info)
             access_cli.enable()
@@ -45,13 +46,13 @@ def eraseDevices(monitor):
             if 'Proceed with reload?' in output:
                 output += access_cli.send_command_timing('\n')
             
-            print(f'{device_info['host']}: {output}')
+            print(f'{device_info["host"]}: {output}')
             
             access_cli.disconnect()
-            print(f'\n\n Closing connection to {device_info['host']} \n')
+            print(f'\n\n Closing connection to {device_info["host"]} \n')
         except Exception as e:
             print(f'''
-Failed to Connect to Device: {host}:
+Failed to Connect to Device: {device_info["host"]}:
 Reason for failure: 
 {e}
 

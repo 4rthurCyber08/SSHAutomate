@@ -548,7 +548,7 @@ Send Configurations
 import cli
 
 commands = '''
-hostname UTM-PH-91
+hostname UTM-PH-#$34T#
 '''
 
 cli.configurep(commands)

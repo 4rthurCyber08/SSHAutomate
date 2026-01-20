@@ -1,0 +1,153 @@
+{
+	"name": "RESTCONF",
+	"item": [
+		{
+			"name": "Operational State interfaces",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Basic cm9vdDpEX1ZheSFfMTAm"
+					}
+				],
+				"url": {
+					"raw": "https://{{host}}:{{port}}/restconf/data/ietf-interfaces:interfaces-state/",
+					"protocol": "https",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"restconf",
+						"data",
+						"ietf-interfaces:interfaces-state",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Configure ietf-interfaces single interface",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Basic cm9vdDpEX1ZheSFfMTAm",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ietf-interfaces:interface\": {\n        \"name\": \"GigabitEthernet2\",\n        \"description\": \"Configured by RESTCONF\",\n        \"type\": \"iana-if-type:ethernetCsmacd\",\n        \"enabled\": true,\n        \"ietf-ip:ipv4\": {\n            \"address\": [\n                {\n                    \"ip\": \"10.255.255.1\",\n                    \"netmask\": \"255.255.255.0\"\n                }\n            ]\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "https://{{host}}:{{port}}/restconf/data/ietf-interfaces:interfaces/interface=GigabitEthernet2",
+					"protocol": "https",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"restconf",
+						"data",
+						"ietf-interfaces:interfaces",
+						"interface=GigabitEthernet2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add new loopback interface",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic cm9vdDpEX1ZheSFfMTAm"
+					},
+					{
+						"key": "Accept",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/yang-data+json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ietf-interfaces:interface\": {\n        \"name\": \"Loopback100\",\n        \"description\": \"Configured by RESTCONF\",\n        \"type\": \"iana-if-type:softwareLoopback\",\n        \"enabled\": true,\n        \"ietf-ip:ipv4\": {\n            \"address\": [\n                {\n                    \"ip\": \"172.16.100.1\",\n                    \"netmask\": \"255.255.255.0\"\n                }\n            ]\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "https://{{host}}:{{port}}/restconf/data/ietf-interfaces:interfaces",
+					"protocol": "https",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"restconf",
+						"data",
+						"ietf-interfaces:interfaces"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Loopback Interface",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/yang-data+json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Basic cm9vdDpEX1ZheSFfMTAm"
+					}
+				],
+				"url": {
+					"raw": "https://{{host}}:{{port}}/restconf/data/ietf-interfaces:interfaces/interface=Loopback100",
+					"protocol": "https",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"restconf",
+						"data",
+						"ietf-interfaces:interfaces",
+						"interface=Loopback100"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

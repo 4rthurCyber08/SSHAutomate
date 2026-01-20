@@ -1,0 +1,89 @@
+
+{
+	"name": "YangCatalog",
+	"item": [
+		{
+			"name": "Return all metadata for specific module in the catalog",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://yangcatalog.org/api/search/modules/ietf-l3vpn-svc,2018-01-19,ietf",
+					"protocol": "https",
+					"host": [
+						"yangcatalog",
+						"org"
+					],
+					"path": [
+						"api",
+						"search",
+						"modules",
+						"ietf-l3vpn-svc,2018-01-19,ietf"
+					]
+				},
+				"description": "This will search for a specific module and it will produce all the details about the module that yangcatalog contains\n\n/search/modules/<name>,<revision>,<organization>\n\nNote that there are 3 indices"
+			},
+			"response": []
+		},
+		{
+			"name": "Return all YANG modules in the catalog",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "saveHelperData",
+							"value": true,
+							"type": "boolean"
+						},
+						{
+							"key": "showPassword",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/vnd.yang.data+json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/vnd.yang.data+json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4="
+					}
+				],
+				"url": {
+					"raw": "https://yangcatalog.org/api/search/modules",
+					"protocol": "https",
+					"host": [
+						"yangcatalog",
+						"org"
+					],
+					"path": [
+						"api",
+						"search",
+						"modules"
+					]
+				},
+				"description": "Search for all the modules in yangcatalog\n\nWarning!!!\nThis might take a long time since there might be a lot of data\n\nOn Dec 2017, we speak about 2878 YANG modules, with some of them having multiple revisions."
+			},
+			"response": []
+		}
+	]
+}

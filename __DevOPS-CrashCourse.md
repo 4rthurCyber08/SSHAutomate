@@ -230,11 +230,713 @@ ssh admin@10.#$34T#.1.2
 - Accept the keys
 - End the SSH session
 
+
 <br>
 <br>
 
 ---
 &nbsp;
+
+
+## Bash
+### Shell Scripts
+1. Output a basic Hello
+~~~
+!@UTM-PH - bash shell
+nano hello.sh
+
+///Edit hello.sh
+echo "hello world"
+///
+
+chmod 500 hello.sh
+./hello.sh
+~~~
+
+<br>
+
+2. Create Multi users
+~~~
+!@UTM-PH - bash shell
+nano add_user.sh
+
+///add_user.sh
+adduser m_user1
+echo "m_user1:C1sc0123" | chpasswd
+
+adduser m_user2
+echo "m_user2:C1sc0123" | chpasswd
+
+adduser m_user3
+echo "m_user3:C1sc0123" | chpasswd
+///
+
+chmod 500 add_user.sh
+./add_user.sh
+~~~
+
+<br>
+
+### Create a shell script to ping multiple sites and get their IP.
+~~~
+!@UTM-PH - bash shell
+cd /home/guestshell; nano icmp.sh
+~~~
+
+<br>
+
+icmp.sh Script
+~~~
+#!/bin/bash
+
+# Prompt User
+read -p "What hosts to ping? (Space-separated) " -a hosts
+
+for ip in "${hosts[@]}"
+do
+  (
+    if [[ "$1" == "-4" || -z "$1" ]]; then
+        result=$(ping -4 -c 1 "$ip" 2>/dev/null)
+    elif [[ "$1" == "-6" ]]; then
+        result=$(ping -6 -c 1 "$ip" 2>/dev/null)
+    fi
+
+    # Extract full IPv4 or IPv6 address
+    host_ip=$(echo "$result" | sed -n 's/^PING[^(]*(\([^)]*\)).*/\1/p')
+
+
+    if echo "$result" | grep -q "time="; then
+        echo "$ip ($host_ip) replied"
+    else
+        echo "$ip ($host_ip) failed"
+    fi
+  ) &
+done
+
+wait
+
+echo "All pings complete!"
+~~~
+
+<br>
+
+Make icmp.sh executable
+~~~
+!@UTM-PH - bash shell
+chmod +x icmp.sh
+~~~
+
+<br>
+
+Run the Bash Script
+~~~
+!@UTM-PH - bash shell
+./icmp.sh
+~~~
+
+
+<br>
+<br>
+
+---
+&nbsp;
+
+
+## Python & JSON
+~~~
+!@powershell
+py -m pip install --upgrade pip
+py -m pip install netmiko
+py -m pip install paramiko
+~~~
+
+
+<br>
+
+
+### Manual Method
+~~~
+!@UTM-PH
+conf t
+ int loopback 1
+  ip add 1.1.1.1 255.255.255.255
+  description configured-manually
+ int loopback 2
+  ip add 2.2.2.2 255.255.255.255
+  description configured-manually
+  end
+~~~
+
+
+<br>
+
+
+### Data Types (JSON)
+cbaba.json
+~~~
+{
+    "monitor_number": "#$34T#",
+    
+    "device_config": {
+        "hostname": "CoreBaba-#$34T#",
+        "address": {
+            "vlan_70": {
+                "ipv4": "10.#$34T#.70.4",
+                "desc": "BLUETEAM"
+            },
+            "vlan_71": {
+                "ipv4": "10.#$34T#.71.4",
+                "desc": "REDTEAM"
+            },
+            "vlan_72": {
+                "ipv4": "10.#$34T#.72.4",
+                "desc": "AUDIT"
+            }
+        },
+        "logging_console": false
+    }
+}
+~~~
+
+
+<br>
+<br>
+
+
+cbaba.py
+~~~
+from netmiko import ConnectHandler
+
+# Provide information about the host/s
+cbaba = {
+    'device_type': 'cisco_ios_telnet',
+    'host': f'10.{m}.1.4',
+    'username': 'admin',
+    'password': 'pass',
+    'secret': 'pass',
+    'port': 23
+}
+
+
+# Write the configurations
+cb_config = [
+    'interface loopback 1',
+    f'ip add 10.{m}.1.1 255.255.255.255',
+    'end'
+]
+
+
+# Connect to the host/s
+accesscli = ConnectHandler(**cbaba)
+
+
+# Enable secret - Only IF Telnet Session
+# accesscli.enable()
+
+
+# Send show command/s
+# show_ip = accesscli.send_command('show ip interface brief')
+# show_vlan = accesscli.send_command('show vlan brief')
+# show_mac = accesscli.send_command('show mac address-table')
+# show_cdp = accesscli.send_command('show cdp neighbor')
+
+
+# Push configurations
+cli_output = accesscli.send_config_set(cb_config)
+
+# Close connection
+accesscli.disconnect()
+
+print(cli_output)
+~~~
+
+
+<br>
+<br>
+
+
+## NETCONF (-P 830)
+*Format XML via "XML Tools" by Josh Johnson*
+
+<br>
+
+__RPC (Remote Procedural Calls) over SSH__
+
+<br>
+
+### STEP 1 - Enable NETCONF
+~~~
+!@Cisco
+conf t
+ netconf-yang
+ end
+~~~
+
+
+&nbsp;
+---
+&nbsp;
+
+
+### STEP 2 -  Establish the session (HELLO)
+~~~
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+    <capability>http://cisco.com/ns/yang/Cisco-IOS-XE-native</capability>
+  </capabilities>
+</hello>
+]]>]]>
+~~~
+
+
+<br>
+
+__NETCONF Operations__
+  <get>           > retrieve configuration/state  
+  <get-config>    > retrieve a datastore  
+  <edit-config>   > push configuration  
+  <delete-config> > delete configuration  
+  <copy-config>   > copy datastore  
+
+
+<br>
+
+
+### GET : Get the Running-Config
+~~~
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <get>
+    <filter>
+      <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native"/>
+    </filter>
+  </get>
+</rpc>
+]]>]]>
+~~~
+
+
+<br>
+
+
+### GET : Get Interface Config
+~~~
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <get>
+    <filter type="subtree">
+      <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+        <interface/>
+      </native>
+    </filter>
+  </get>
+</rpc>
+]]>]]>
+~~~
+
+
+<br>
+
+
+### GET-CONFIG : Get Configurations from Datastore
+~~~
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <get-config>
+    <source>
+      <running/>
+    </source>
+    <filter>
+      <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+        <interface/>
+      </native>
+    </filter>
+  </get-config>
+</rpc>
+]]>]]>
+~~~
+
+
+<br>
+
+
+### EDIT-CONFIG : Create Loopbacks
+~~~
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running/>
+    </target>
+    <config>
+      <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+        <interface>
+          <Loopback>
+            <name>5</name>
+            <description>Configured via raw NETCONF SSH</description>
+            <ip>
+              <address>
+                <primary>
+                  <address>5.5.5.5</address>
+                  <mask>255.255.255.255</mask>
+                </primary>
+              </address>
+            </ip>
+          </Loopback>
+        </interface>
+      </native>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+~~~
+
+
+<br>
+
+
+### DELETE-CONFIG : Delete Loopback 
+~~~
+<rpc message-id="200" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running/>
+    </target>
+    <config>
+      <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+        <interface>
+          <Loopback operation="delete">
+            <name>5</name>
+          </Loopback>
+        </interface>
+      </native>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+~~~
+
+
+<br>
+
+
+### COPY-CONFIG (Only for supported IOS) : Copy Running Configurations
+~~~
+<rpc message-id="105" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <copy-config>
+    <target>
+      <startup/>
+    </target>
+    <source>
+      <running/>
+    </source>
+  </copy-config>
+</rpc>
+]]>]]>
+~~~
+
+
+&nbsp;
+---
+&nbsp;
+
+
+## YANG DATA MODELING LANGUAGE
+### Map YANG to XML
+IETF RFC 8530: https://datatracker.ietf.org/doc/html/rfc8530  
+Cisco YANG Data: https://developer.cisco.com/docs/nso-guides-6.3/the-yang-data-modeling-language/#yang-introduction  
+
+<br>
+
+~~~
+container interface {
+    list Loopback {
+        key "name";
+        leaf name { type string; }
+        leaf description { type string; }
+        container ip {
+            container address {
+                leaf primary { type inet:ipv4-address; }
+            }
+        }
+    }
+}
+~~~
+
+
+<br>
+
+
+~~~
+<native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+  <interface>
+    <Loopback>
+      <name>1</name>
+      <description>Configured via raw NETCONF SSH</description>
+      <ip>
+        <address>
+          <primary>
+            <address>5.5.5.5</address>
+            <mask>255.255.255.255</mask>
+          </primary>
+        </address>
+      </ip>
+    </Loopback>
+  </interface>
+</native>
+~~~
+
+
+<br>
+
+
+~~~
+container system {
+    container login {
+        leaf message {
+            type string;
+            description
+                "Message given at start of login session";
+        }
+    }
+}
+~~~
+
+
+<br>
+
+
+~~~
+<system>
+  <login>
+    <message>Good morning, Dave</message>
+  </login>
+</system>
+~~~
+
+
+&nbsp;
+---
+&nbsp;
+
+
+### XML YANG Data via Python
+~~~
+!@powershell
+py -m pip install ncclient
+py -m pip install lxml
+~~~
+
+
+<br>
+
+
+~~~
+from ncclient import manager
+from ncclient import xml_
+
+import xml.dom.minidom
+from lxml import etree
+
+# Device info
+ios_xe_host = "192.168.102.11"
+ios_xe_port = 830
+ios_xe_username = "admin"
+ios_xe_password = "pass"
+
+# Connect to device
+m = manager.connect(
+    host=ios_xe_host,
+    port=ios_xe_port,
+    username=ios_xe_username,
+    password=ios_xe_password,
+    hostkey_verify=False,
+    look_for_keys=False,
+    device_params={"name": "iosxe"}
+)
+
+# Build the NETCONF payload as XML ElementTree
+netconf_interface_template = """
+<config>
+  <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+    <interface>
+      <Loopback>
+        <name>1</name>
+        <description>Configured via NETCONF</description>
+        <ip>
+          <address>
+            <primary>
+              <address>7.7.7.7</address>
+              <mask>255.255.255.255</mask>
+            </primary>
+          </address>
+        </ip>
+      </Loopback>
+    </interface>
+  </native>
+</config>
+"""
+
+# Convert string to ElementTree element
+netconf_element = xml_.to_ele(netconf_interface_template)
+
+# Push configuration
+netconf_reply = m.edit_config(target="running", config=netconf_element)
+
+# Pretty print reply
+print(xml.dom.minidom.parseString(netconf_reply.xml).toprettyxml())
+
+# Close session
+m.close_session()
+~~~
+
+
+<br>
+<br>
+
+---
+&nbsp;
+
+
+## RESTCONF
+*Net Config over HTTPS*
+
+~~~
+!@Cisco
+conf t
+ username admin priv 15 secret pass
+ ip http server
+ ip http secure-server
+ restconf
+ end
+~~~
+
+
+<br>
+
+
+### From Cisco Configuration File (CLI) to JSON
+~~~
+!@Telnet -p 80
+GET /index.html
+
+GET / HTTP/1.1
+Host: 192.168.102.11
+~~~
+
+
+<br>
+
+
+~~~
+!@cmd
+curl.exe -k -u admin:pass -H "Accept: application/yang-data+xml" https://192.168.102.11/restconf/data/ietf-interfaces:interfaces
+curl.exe -k -u admin:pass -H "Accept: application/yang-data+json" https://192.168.102.11/restconf/data/ietf-interfaces:interfaces
+
+
+curl.exe -k -u admin:pass -H "Accept: application/yang-data+json" https://192.168.102.11/restconf/data/ietf-yang-library:modules-state -o modules.json
+~~~
+
+
+<br>
+
+__ietf-interfaces__
+~~~
+!@cmd
+curl.exe -k -u admin:pass -H "Accept: application/yang-data+json" https://192.168.102.11:443/restconf/tailf/modules/ietf-interfaces/2014-05-08 -o int.yang
+~~~
+
+
+<br>
+<br>
+
+
+### CRUD     What to do with data
+- Create     Add new data
+- Read       Retrieve existing data
+- Update     Modify existing data
+- Delete     Remove data
+
+
+<br>
+
+
+### HTTP Protocol Operations / Methods
+- Get        Retrieve a resource
+- Post       Submit new data / create
+- Put        Replace an existing resource
+- Patch      Partially modify a resource
+- Delete     Delete a resource
+
+
+<br>
+
+
+### POST
+__loopback.json__
+~~~
+{
+  "ietf-interfaces:interface": {
+    "name": "Loopback9",
+    "description": "Configured via RESTCONF",
+    "type": "iana-if-type:softwareLoopback",
+    "enabled": true,
+    "ietf-ip:ipv4": {
+      "address": [
+        {
+          "ip": "9.9.9.9",
+          "netmask": "255.255.255.255"
+        }
+      ]
+    }
+  }
+}
+~~~
+
+
+<br>
+
+
+~~~
+!@cmd
+curl.exe -k -u admin:pass -X POST `
+  -H "Content-Type: application/yang-data+json" `
+  -d "@loopback.json" `
+  https://192.168.102.11/restconf/data/ietf-interfaces:interfaces
+~~~
+
+
+<br>
+
+
+### HTTP POST DATA
+~~~
+POST /restconf/data/ietf-interfaces:interfaces HTTP/1.1
+Host: 192.168.102.11
+Authorization: Basic YWRtaW46cGFzcw==
+Content-Type: application/yang-data+json
+Accept: application/yang-data+json
+Content-Length: 187
+
+{
+  "ietf-interfaces:interface": {
+    "name": "Loopback9",
+    "description": "Configured via RESTCONF",
+    "type": "iana-if-type:softwareLoopback",
+    "enabled": true,
+    "ipv4": {
+      "address": [
+        {"ip": "9.9.9.9", "netmask": "255.255.255.255"}
+      ]
+    }
+  }
+}
+~~~
+
+
+<br>
+<br>
+
+---
+&nbsp;
+
 
 ## Cisco IOX
 Provide Internet for IOX Guestshell Containers
@@ -380,126 +1082,8 @@ python3 -m pip install "netmiko<4.0"
 ---
 &nbsp;
 
-## Bash
-### Shell Scripts
-1. Output a basic Hello
-~~~
-!@UTM-PH - bash shell
-nano hello.sh
 
-///Edit hello.sh
-echo "hello world"
-///
-
-chmod 500 hello.sh
-./hello.sh
-~~~
-
-<br>
-
-2. Create Multi users
-~~~
-!@UTM-PH - bash shell
-nano add_user.sh
-
-///add_user.sh
-adduser m_user1
-echo "m_user1:C1sc0123" | chpasswd
-
-adduser m_user2
-echo "m_user2:C1sc0123" | chpasswd
-
-adduser m_user3
-echo "m_user3:C1sc0123" | chpasswd
-///
-
-chmod 500 add_user.sh
-./add_user.sh
-~~~
-
-<br>
-
-### Create a shell script to ping multiple sites and get their IP.
-~~~
-!@UTM-PH - bash shell
-cd /home/guestshell; nano icmp.sh
-~~~
-
-<br>
-
-icmp.sh Script
-~~~
-#!/bin/bash
-
-# Prompt User
-read -p "What hosts to ping? (Space-separated) " -a hosts
-
-for ip in "${hosts[@]}"
-do
-  (
-    if [[ "$1" == "-4" || -z "$1" ]]; then
-        result=$(ping -4 -c 1 "$ip" 2>/dev/null)
-    elif [[ "$1" == "-6" ]]; then
-        result=$(ping -6 -c 1 "$ip" 2>/dev/null)
-    fi
-
-    # Extract full IPv4 or IPv6 address
-    host_ip=$(echo "$result" | sed -n 's/^PING[^(]*(\([^)]*\)).*/\1/p')
-
-
-    if echo "$result" | grep -q "time="; then
-        echo "$ip ($host_ip) replied"
-    else
-        echo "$ip ($host_ip) failed"
-    fi
-  ) &
-done
-
-wait
-
-echo "All pings complete!"
-~~~
-
-<br>
-
-Make icmp.sh executable
-~~~
-!@UTM-PH - bash shell
-chmod +x icmp.sh
-~~~
-
-<br>
-
-Run the Bash Script
-~~~
-!@UTM-PH - bash shell
-./icmp.sh
-~~~
-
-<br>
-<br>
-
----
-&nbsp;
-
-## Python
-### Manual Method
-~~~
-!@UTM-PH
-conf t
- int loopback 1
-  ip add 1.1.1.1 255.255.255.255
-  description configured-manually
- int loopback 2
-  ip add 2.2.2.2 255.255.255.255
-  description configured-manually
-  end
-~~~
-
-&nbsp;
----
-&nbsp;
-
+## Python CLI
 ### CLI Module
 Utilize CLI module (Cisco Proprietary Module) to send commands from guestshell to the cisco device.
 
@@ -532,11 +1116,11 @@ cli.configurep(commands)
 import cli
 
 commands = '''
-int loop 3
-ip add 3.3.3.3 255.255.255.255
+int loop 10
+ip add 10.10.10.10 255.255.255.255
 description via-python-cli
 int loop 4
-ip add 4.4.4.4 255.255.255.255
+ip add 11.11.11.11 255.255.255.255
 description via-python-cli
 '''
 
@@ -576,11 +1160,11 @@ utm_ph = {
 # Write the configurations
 utm_config = [
     'interface loopback 5',
-    f'ip add 5.5.5.5 255.255.255.255',
+    f'ip add 12.12.12.12 255.255.255.255',
 	'description via-netmiko',
 	'exit',
 	'interface loopback 6',
-    f'ip add 6.6.6.6 255.255.255.255',
+    f'ip add 13.13.13.13 255.255.255.255',
 	'description via-netmiko',
     'end'
 ]
@@ -661,7 +1245,7 @@ device_info = {
 # Config
 commands = [
     'int loopback 7',
-    'ip add 7.7.7.7 255.255.255.255',
+    'ip add 12.12.12.12 255.255.255.255',
     'description made-by-me',
     'end'
 ]
@@ -730,7 +1314,7 @@ list_of_device = list_of_device.split()
 ### Device Information
 device_info = {
     'device_type': 'cisco_ios_telnet',
-    'host': '10.91.1.2',
+    'host': '10.#$34T#.1.2',
     'username': 'admin',
     'password': 'pass',
     'secret': 'pass',
@@ -827,7 +1411,7 @@ def get_configs(user_m, add_dn=''):
 def config_devices(user_m, add_dn='', terminal=False):
     device_info = {
         'device_type': 'cisco_ios_telnet',
-        'host': f'10.{user_m}.100.8',
+        'host': f'10.#$34T#.100.8',
         'username': 'admin',
         'password': 'pass',
         'secret': 'pass'
@@ -1045,7 +1629,7 @@ event manager run WatchLo0
 
 <br>
 
-### 2. Send basic command (loop 8 & 9)
+### 2. Send basic command (loop 14 & 15)
 ~~~
 !@UTM-PH-#$34T#
 config t
@@ -1150,8 +1734,8 @@ Remove all current loopbacks, then create loopbacks via the following methods:
 | Loopback | IP Address | Method                    |
 | ---      | ---        | ---                       |
 | 1        | 1.1.1.1    | Manually                  |
-| 2        | 2.2.2.2    | Python (using CLI module) |
-| 3        | 3.3.3.3    | Python (using Netmiko)    |
+| 2        | 2.2.2.2    | &nbsp;                    |
+| 3        | 3.3.3.3    | &nbsp;                    |
 | 4        | 4.4.4.4    | EEM                       |
 
 <br>
@@ -1900,6 +2484,3 @@ Remove all current loopbacks, then create loopbacks via the following methods:
 | 5        | 5.5.5.5    | Terraform                 |
 | 6        | 6.6.6.6    | RESTCONF (Postman)        |
 | 7        | 7.7.7.7    | EEM                       |
-
-
-

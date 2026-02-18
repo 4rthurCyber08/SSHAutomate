@@ -162,13 +162,7 @@ ipv4.addresses 192.168.102.6/24 \
 autoconnect yes
 
 nmcli connection up VMNET2
-~~~
 
-<br>
-
-VMNet3:
-~~~
-!@NetOps-PH
 nmcli connection add \
 type ethernet \
 con-name VMNET3 \
@@ -178,13 +172,7 @@ ipv4.addresses 11.11.11.100/27 \
 autoconnect yes
 
 nmcli connection up VMNET3
-~~~
 
-<br>
-
-Bridged:
-~~~
-!@NetOps-PH
 nmcli connection add \
 type ethernet \
 con-name BRIDGED \
@@ -194,24 +182,7 @@ ipv4.addresses 10.#$34T#.1.6/24 \
 autoconnect yes
 
 nmcli connection up BRIDGED
-~~~
 
-<br>
-
-Verify:
-~~~
-!@NetOps-PH
-ip -4 addr
-
-nmcli connection show
-netstat -rn
-~~~
-
-<br>
-
-4. Routing
-~~~
-!@NetOps-PH
 ip route add 10.0.0.0/8 via 10.#$34T#.1.4 dev ens256
 ip route add 200.0.0.0/24 via 10.#$34T#.1.4 dev ens256
 ip route add 0.0.0.0/0 via 11.11.11.113 dev ens224

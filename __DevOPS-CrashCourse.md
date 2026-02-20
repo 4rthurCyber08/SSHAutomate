@@ -1190,6 +1190,14 @@ accesscli.disconnect()
 print(cli_output)
 ~~~
 
+
+<br>
+
+~~~
+python3.8.  -m pip install netmiko
+python3.8. addloop.py
+~~~
+
 <br>
 
 ### Create a Python script that will configure Loopback 7 on UTM-PH

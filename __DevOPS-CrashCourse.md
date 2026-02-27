@@ -941,6 +941,7 @@ Content-Length: 187
 ## Cisco IOX
 Provide Internet for IOX Guestshell Containers
 
+~~~
 !@UTM-PH
 conf t
  ip domain lookup
@@ -964,6 +965,7 @@ conf t
  ip route 0.0.0.0 0.0.0.0 208.8.8.2
  ip name-server 8.8.8.8 1.1.1.1
  end
+~~~
 
 &nbsp;
 ---

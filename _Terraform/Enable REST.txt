@@ -3,6 +3,7 @@ conf t
  username admin privilege 15 secret pass
  ip http authentication local
  ip http secure-server
+ netconf-yang
  restconf
  line vty 0 14
   password pass

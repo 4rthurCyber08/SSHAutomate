@@ -220,6 +220,7 @@ isp
 
 <br>
 
+__Provide Device Information__
 ~~~
 cd group_vars 
 nano rstall.yml
@@ -235,3 +236,29 @@ ansible_become_password: pass
 ansible_network_os: ios
 ***
 ~~~
+
+
+<br>
+<br>
+
+
+### STEP 3 - Create Templates
+
+~~~
+!@NetOps
+cd /templates
+nano ip.yml
+
+***
+- name: Configuring IP Addresses
+  tags: ip
+  cisco.ios.ios_config:
+    - interface {{ inet.type }} {{ inet.id }}
+    - ip address {{ inet.address }} {{ inet.mask }}
+    - {{ 'shutdown' if inet.shutdown | default(true) else 'no shutdown' }}
+    - end
+***
+
+~~~
+
+

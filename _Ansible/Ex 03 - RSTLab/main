@@ -43,3 +43,87 @@ conf t
 ping vrf MANAGEMENT 172.16.29.254
 ping vrf MANAGEMENT 10.69.255.2
 ~~~
+
+
+<br>
+<br>
+
+
+## ANSIBLE
+
+### STEP 1 - Configure SSH
+
+For an SSH connection to be established, the device must have:
+| Description                      | Command                                  |
+| ---                              | ---                                      |
+| a domain name                    | ip domain name day1lab.com               |
+| a local user account             | username admin privilege 15 secret pass  |
+| generated crypto keys            | crypto key generate rsa modulus 2048     |
+| SSH enabled                      | ip ssh version 2                         |
+| enable remote access             | transport input all                      |
+| enable remote user/pass login    | login local                              |
+
+<br>
+
+Extra lines
+| Description             | Command                      |
+| ---                     | ---                          |
+| password encryption     | service password-encryption  |
+| no logs                 | no logging console           |
+| no domain lookups       | no ip domain-lookup          |
+| no timeout              | exec-timeout 0 0             |
+
+<br>
+
+~~~
+!@RST Devices
+conf t
+ ip domain name autorst.com
+ username admin privilege 15 secret pass
+ line vty 0 4
+  transport input all
+  login local
+  exec-timeout 0 0
+  exit
+ crypto key generate rsa modulus 2048 label devs
+ ip ssh rsa keypair-name devs
+ ip ssh version 2
+ end
+~~~
+
+<br>
+
+### STEP 2 - Provide SSH Keys to the Ansible Server
+
+~~~
+!@NetOps
+rm -rf /root/.ssh/known_hosts
+
+ssh admin@172.16.29.101
+  > (yes/no): yes
+  > Password: pass
+
+P1# exit
+~~~
+
+<br>
+
+| Device | IP            |
+| ---    | ---           |
+| P1     | 172.16.29.101 |
+| P2     | 172.16.29.102 |
+| A1     | 172.16.29.103 |
+| A2     | 172.16.29.104 |
+| S1     | 172.16.29.105 |
+| C1     | 172.16.29.106 |
+| C2     | 172.16.29.107 |
+| S2     | 172.16.29.108 |
+| R4     | 172.16.29.109 |
+| R3     | 172.16.29.110 |
+| R2     | 172.16.29.111 |
+| R1     | 172.16.29.112 |
+| I3     | 172.16.29.113 |
+| I2     | 172.16.29.114 |
+| I1     | 172.16.29.115 |
+| GOOGLE | 172.16.29.116 |
+

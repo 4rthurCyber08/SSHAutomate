@@ -32,3 +32,14 @@ nmcli connection add \
 nmcli connection up RST
 ~~~
 
+<br>
+
+~~~
+!@RST Devices
+conf t
+ int e3/0
+  no shut
+  end
+ping vrf MANAGEMENT 172.16.29.254
+ping vrf MANAGEMENT 10.69.255.2
+~~~

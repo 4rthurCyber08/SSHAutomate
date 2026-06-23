@@ -1,1 +1,34 @@
-ts
+
+## Setup
+
+NetOps
+| NetAdapter |                     |        |
+| ---        | ---                 | ---    |
+| 1          | NAT                 | ens160 |
+| 2          | VMNET2              | ens192 |
+| 3          | VMNET16             | ens224 |
+| 4          | Bridged (Replicate) | ens256 |
+
+<br>
+
+~~~
+!@cmd
+route add 172.16.29.0 mask 255.255.255.0 10.69.255.6
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nmcli connection down VMNET3
+nmcli connection add \
+  type ethernet \
+  con-name RST \
+  ifname ens224 \
+  ipv4.method manual \
+  ipv4.addresses 10.69.255.2/29 \
+  ipv4.routes "172.16.29.0/24 10.69.255.6" \
+  autoconnect yes
+nmcli connection up RST
+~~~
+

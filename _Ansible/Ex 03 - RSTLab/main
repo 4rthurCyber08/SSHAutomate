@@ -253,12 +253,59 @@ nano ip.yml
 - name: Configuring IP Addresses
   tags: ip
   cisco.ios.ios_config:
-    - interface {{ inet.type }} {{ inet.id }}
-    - ip address {{ inet.address }} {{ inet.mask }}
-    - {{ 'shutdown' if inet.shutdown | default(true) else 'no shutdown' }}
-    - end
+    - interface {{ item.type }} {{ item.id }}
+    - ip address {{ item.address }} {{ item.mask }}
+    - {{ 'shutdown' if item.shutdown | default(true) else 'no shutdown' }}
+  loop: {{ inet }}
 ***
-
 ~~~
 
+<br>
 
+~~~
+!@NetOps
+nano host_vars/p1.yml
+
+***                                        
+inet:
+  - id: 0/0
+    type: ethernet
+    address: 10.2.1.101
+    mask: 255.255.255.0
+    shutdown: no
+***
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nano host_vars/p1.yml
+
+***
+inet:
+  - id: 1/0
+    type: ethernet
+    address: 10.2.1.102
+    mask: 255.255.255.0
+    shutdown: no
+***
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nano playbooks/test.yml
+
+***
+- name: Test IP
+  hosts:
+    - p1
+    - p2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/ip.yml'
+
+***
+~~~

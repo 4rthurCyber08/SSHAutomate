@@ -1,0 +1,7 @@
+inet:
+  - id: 1/0
+    type: ethernet
+    address: 10.2.1.102
+    mask: 255.255.255.0
+    shutdown: no
+

@@ -1,0 +1,18 @@
+dhcp:
+  - exclude:
+      start: 10.2.1.1
+      end: 10.2.1.100
+    name: MGMTPOOL
+    network: 10.2.1.0
+    mask: 255.255.255.0
+    gateway: 10.2.1.1
+    dns: 10.2.1.1
+    domain: MGMT.COM
+
+eigrp:
+  - asn: 100
+    id: 10.2.1.1
+    networks:
+      - 10.2.1.0 0.0.0.255
+      - 10.2.2.0 0.0.0.255
+      - 192.168.1.128 0.0.0.31

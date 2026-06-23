@@ -1,0 +1,11 @@
+- name: EIGRP
+  tags: eigrp
+  cisco.ios.ios_config:
+    lines:
+      - "ip routing"
+      - "router eigrp {{ eigrp_item.asn }}"
+      - "eigrp router-id {{ eigrp_item.id }}"
+      - "network {{ item }}"
+  loop: "{{ eigrp_item.networks }}"
+  loop_control:
+    loop_var: item

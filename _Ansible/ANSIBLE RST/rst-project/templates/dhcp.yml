@@ -1,0 +1,12 @@
+- name: Configuring DHCP Pools
+  tags: dhcp
+  cisco.ios.ios_config:
+    match: none
+    lines:
+      - "ip dhcp excluded-address {{ item.exclude.start }} {{ item.exclude.end }}"
+      - "ip dhcp pool {{ item.name }}"
+      - "network {{ item.network }}  {{ item.mask }}"
+      - "default-router {{ item.gateway }}"
+      - "dns-server {{ item.dns }}"
+      - "domain-name {{ item.domain }}"
+      

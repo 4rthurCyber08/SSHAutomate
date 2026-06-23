@@ -1,0 +1,43 @@
+- name: Test IP
+  hosts:
+    - p1
+    - p2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/ip.yml'
+      loop: "{{ inet }}"
+      loop_control:
+        loop_var: item
+
+- name: TEST DHCP
+  hosts:
+    - c1
+    - c2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/dhcp.yml'
+      loop: "{{ dhcp }}"
+      loop_control:
+        loop_var: item
+
+
+- name: SWITCHPRORTS
+  hosts:
+    - a1
+    - a2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/ports.yml'
+      loop: "{{ switchports }}"
+      loop_control:
+        loop_var: item
+
+- name: EIGRP
+  hosts:
+    - c1
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/eigrp.yml'
+      loop: "{{ eigrp }}"
+      loop_control:
+        loop_var: eigrp_item

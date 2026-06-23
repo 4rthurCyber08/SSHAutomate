@@ -1,0 +1,10 @@
+dhcp:
+  - exclude:
+      start: 10.2.1.1
+      end: 10.2.1.199
+    name: MGMTPOOL
+    network: 10.2.1.0
+    mask: 255.255.255.0
+    gateway: 10.2.1.2
+    dns: 10.2.1.2
+    domain: MGMT.COM

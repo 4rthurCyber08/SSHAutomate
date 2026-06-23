@@ -1,0 +1,6 @@
+inet:
+  - id: 0/0
+    type: ethernet
+    dhcp: true
+    shutdown: false
+

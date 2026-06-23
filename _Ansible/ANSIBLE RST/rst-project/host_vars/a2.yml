@@ -1,0 +1,7 @@
+switchports:
+  - type: ethernet
+    id: 1/0
+    mode: access
+    vlan: 10
+
+

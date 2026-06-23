@@ -1,0 +1,8 @@
+- name: Configure Switchports
+  tags: sw
+  cisco.ios.ios_config:
+    lines:
+      - "interface {{ item.type }} {{ item.id }}"
+      - "switchport mode {{ item.mode }}"
+      - "switchport access vlan {{ item.vlan }}"
+

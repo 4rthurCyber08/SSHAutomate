@@ -127,3 +127,111 @@ P1# exit
 | I1     | 172.16.29.115 |
 | GOOGLE | 172.16.29.116 |
 
+
+<br>
+<br>
+
+
+### STEP 2 - Setup Ansible Project
+
+__Create Project Directories__
+~~~
+!@NetOps
+cd /etc/ansible \
+mkdir -p rst-project/{group_vars,host_vars,playbooks,templates}
+~~~
+
+<br>
+
+__Create Default Configuration Files__
+~~~
+!@NetOps
+cd rst-project \
+nano ansible.cfg
+
+***
+[defaults]
+forks = 30
+strategy = free
+timeout = 60
+
+[paramiko_connection]
+look_for_keys = False
+***
+~~~
+
+<br>
+
+__Create Inventory File__
+~~~
+!@NetOps
+nano rst.ini
+
+***
+[endpoints]
+p1 ansible_host=172.16.29.101
+p2 ansible_host=172.16.29.102
+s1 ansible_host=172.16.29.105
+s2 ansible_host=172.16.29.108
+
+[access]
+a1 ansible_host=172.16.29.103
+a2 ansible_host=172.16.29.104
+
+[core]
+c1 ansible_host=172.16.29.106
+c2 ansible_host=172.16.29.107
+
+[routers]
+r4 ansible_host=172.16.29.109
+r3 ansible_host=172.16.29.110
+r2 ansible_host=172.16.29.111
+r1 ansible_host=172.16.29.112
+
+[isp]
+i1 ansible_host=172.16.29.113
+i2 ansible_host=172.16.29.114
+i3 ansible_host=172.16.29.115
+google ansible_host=172.16.29.116
+
+[eigrp]
+r4
+
+[eigrp:children]
+core
+
+[ospf:children]
+routers
+
+[bgp]
+r1
+
+[bgp:children]
+isp
+
+[rstall:children]
+endpoints
+access
+core
+routers
+isp
+***
+~~~
+
+<br>
+
+~~~
+cd group_vars 
+nano rstall.yml
+
+***
+ansible_user: admin
+ansible_password: pass
+ansible_connection: network_cli
+ansible_port: 22
+ansible_become: yes
+ansible_become_method: enable
+ansible_become_password: pass
+ansible_network_os: ios
+***
+~~~

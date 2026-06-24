@@ -1,0 +1,12 @@
+---
+- name: Static IP Addressing
+  hosts: 
+    - p1
+  gather_facts: false
+  tasks:
+    - include_tasks: '../templates/int.yml'
+      loop: "{{ interfaces }}"
+      loop_control:
+        loop_var: item
+
+...

@@ -1,0 +1,9 @@
+---
+- name: OSPF Configurations
+  hosts:
+    - r1
+    - r2
+  gather_facts: false
+  tasks:
+    - include_tasks: "../templates/ospf.yml"
+...

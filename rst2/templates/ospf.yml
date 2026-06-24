@@ -1,0 +1,34 @@
+---
+- name: OSPF
+  tags: ospf
+  cisco.ios.ios_config:
+    parents:
+      - "router ospf {{ item.process }}"
+    lines:
+      - "{{ 'router-id ' ~ item.routerid if item.routerid is defined and item.routerid else '' }}"
+  loop: "{{ ospf }}"
+  loop_control:
+    loop_var: item
+
+- name: OSPF NETWORKS
+  tags: ospfnet
+  cisco.ios.ios_config:
+    parents:
+      - "router ospf {{ item.0.process }}"
+    lines:
+      - "network {{ item.1.network }} {{ item.1.wildmask }} area {{ item.1.area }}"
+  loop: "{{ ospf | subelements('networks') }}"
+
+- name: OSPF INTERFACES
+  tags: ospfint
+  cisco.ios.ios_config:
+    parents:
+      - "interface {{ item.1.type }} {{ item.1.id }}"
+    lines:
+      - "{{ 'ip ospf network ~ item.1.network' if item.1.network is defined and item.1.network else omit }}"
+      - "{{ 'ip ospf priority ~ item.1.priority' if item.1.priorty is defined and item.1.priority else omit }}"
+  loop: "{{ ospf | subelements('interfaces') }}"
+  when:
+    - item.0.interface is defined
+    - item.0.interface | length > 0
+...

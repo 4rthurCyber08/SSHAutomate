@@ -1,0 +1,9 @@
+---
+- name: Configuring EIGRP
+  hosts: 
+    - c1
+  gather_facts: false
+  tasks:
+    - include_tasks: '../templates/eigrp.yml'
+    
+...

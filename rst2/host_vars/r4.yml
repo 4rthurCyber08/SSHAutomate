@@ -1,0 +1,16 @@
+ospf:
+  - process: 1
+    routerid: 1.1.1.1
+    areas:
+      - area: 0
+        networks:
+          - 1.1.1.1 0.0.0.0
+      - area: 12
+        networks:
+          - 10.1.1.0 0.0.0.3
+    interface:
+      - type: ethernet
+        id: 0/0
+        network: point-to-point
+        priority: 255
+        passive: false

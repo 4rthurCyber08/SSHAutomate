@@ -1,0 +1,11 @@
+---
+- name: Interface
+  tags: int
+  cisco.ios.ios_config:
+    parents:
+      - "interface {{ item.type }} {{ item.id }}"
+    lines:
+      - "ip address {{ item.ipv4.address }} {{ item.ipv4.mask }}"
+      - "{{ 'description ' ~ item.desc if item.desc is defined and item.desc else '' }}"
+      - "{{ 'shutdown' if item.shut | default(true) else 'no shutdown' }}"
+...

@@ -1,0 +1,8 @@
+interfaces:
+  - id: 0/0
+    type: ethernet
+    desc: Configured via ANSIBLE
+    ipv4: 
+      address: 10.2.1.101
+      mask: 255.255.255.0
+    shut: false

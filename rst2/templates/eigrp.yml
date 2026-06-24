@@ -1,0 +1,20 @@
+- name: EIGRP INSTANCE
+  tags: eigrp
+  cisco.ios.ios_config:
+    parents:
+      - "router eigrp {{ item.asn }}"
+    lines:
+      - "{{ 'eigrp router-id ' ~ item.routerid if item.routerid is defined and item.routerid else '' }}"
+  loop: "{{ eigrp }}"
+  loop_control:
+    loop_var: item
+
+
+- name: EIGRP NETWORKS
+  tags: eigrpnet
+  cisco.ios.ios_config:
+    parents:
+      - "router eigrp {{ item.0.asn }}"
+    lines:
+      - "network {{ item.1 }}"
+  loop: "{{ eigrp | subelements('networks') }}"

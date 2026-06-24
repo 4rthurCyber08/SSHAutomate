@@ -1,0 +1,403 @@
+
+## Setup
+
+NetOps
+| NetAdapter |                     |        |
+| ---        | ---                 | ---    |
+| 1          | NAT                 | ens160 |
+| 2          | VMNET2              | ens192 |
+| 3          | VMNET16             | ens224 |
+| 4          | Bridged (Replicate) | ens256 |
+
+<br>
+
+~~~
+!@cmd
+route add 172.16.29.0 mask 255.255.255.0 10.69.255.6
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nmcli connection down VMNET3
+nmcli connection add \
+  type ethernet \
+  con-name RST \
+  ifname ens224 \
+  ipv4.method manual \
+  ipv4.addresses 10.69.255.2/29 \
+  ipv4.routes "172.16.29.0/24 10.69.255.6" \
+  autoconnect yes
+nmcli connection up RST
+~~~
+
+<br>
+
+~~~
+!@RST Devices
+conf t
+ int e3/0
+  no shut
+  end
+ping vrf MANAGEMENT 172.16.29.254
+ping vrf MANAGEMENT 10.69.255.2
+~~~
+
+
+<br>
+<br>
+
+
+## ANSIBLE
+
+### STEP 1 - Configure SSH
+
+For an SSH connection to be established, the device must have:
+| Description                      | Command                                  |
+| ---                              | ---                                      |
+| a domain name                    | ip domain name day1lab.com               |
+| a local user account             | username admin privilege 15 secret pass  |
+| generated crypto keys            | crypto key generate rsa modulus 2048     |
+| SSH enabled                      | ip ssh version 2                         |
+| enable remote access             | transport input all                      |
+| enable remote user/pass login    | login local                              |
+
+<br>
+
+Extra lines
+| Description             | Command                      |
+| ---                     | ---                          |
+| password encryption     | service password-encryption  |
+| no logs                 | no logging console           |
+| no domain lookups       | no ip domain-lookup          |
+| no timeout              | exec-timeout 0 0             |
+
+<br>
+
+~~~
+!@RST Devices
+conf t
+ ip domain name autorst.com
+ username admin privilege 15 secret pass
+ line vty 0 4
+  transport input all
+  login local
+  exec-timeout 0 0
+  exit
+ crypto key generate rsa modulus 2048 label devs
+ ip ssh rsa keypair-name devs
+ ip ssh version 2
+ end
+~~~
+
+<br>
+
+### STEP 2 - Provide SSH Keys to the Ansible Server
+
+~~~
+!@NetOps
+rm -rf /root/.ssh/known_hosts
+
+ssh admin@172.16.29.101
+  > (yes/no): yes
+  > Password: pass
+
+P1# exit
+~~~
+
+<br>
+
+| Device | IP            |
+| ---    | ---           |
+| P1     | 172.16.29.101 |
+| P2     | 172.16.29.102 |
+| A1     | 172.16.29.103 |
+| A2     | 172.16.29.104 |
+| S1     | 172.16.29.105 |
+| C1     | 172.16.29.106 |
+| C2     | 172.16.29.107 |
+| S2     | 172.16.29.108 |
+| R4     | 172.16.29.109 |
+| R3     | 172.16.29.110 |
+| R2     | 172.16.29.111 |
+| R1     | 172.16.29.112 |
+| I3     | 172.16.29.113 |
+| I2     | 172.16.29.114 |
+| I1     | 172.16.29.115 |
+| GOOGLE | 172.16.29.116 |
+
+
+<br>
+<br>
+
+
+### STEP 2 - Setup Ansible Project
+
+__Create Project Directories__
+~~~
+!@NetOps
+cd /etc/ansible \
+mkdir -p rst-project/{group_vars,host_vars,playbooks,templates}
+~~~
+
+<br>
+
+__Create Default Configuration Files__
+~~~
+!@NetOps
+cd rst-project \
+nano ansible.cfg
+
+***
+[defaults]
+forks = 30
+strategy = free
+timeout = 60
+
+[paramiko_connection]
+look_for_keys = False
+***
+~~~
+
+<br>
+
+__Create Inventory File__
+~~~
+!@NetOps
+nano rst.ini
+
+***
+[endpoints]
+p1 ansible_host=172.16.29.101
+p2 ansible_host=172.16.29.102
+s1 ansible_host=172.16.29.105
+s2 ansible_host=172.16.29.108
+
+[access]
+a1 ansible_host=172.16.29.103
+a2 ansible_host=172.16.29.104
+
+[core]
+c1 ansible_host=172.16.29.106
+c2 ansible_host=172.16.29.107
+
+[routers]
+r4 ansible_host=172.16.29.109
+r3 ansible_host=172.16.29.110
+r2 ansible_host=172.16.29.111
+r1 ansible_host=172.16.29.112
+
+[isp]
+i1 ansible_host=172.16.29.113
+i2 ansible_host=172.16.29.114
+i3 ansible_host=172.16.29.115
+google ansible_host=172.16.29.116
+
+[eigrp]
+r4
+
+[eigrp:children]
+core
+
+[ospf:children]
+routers
+
+[bgp]
+r1
+
+[bgp:children]
+isp
+
+[rstall:children]
+endpoints
+access
+core
+routers
+isp
+***
+~~~
+
+<br>
+
+__Provide Device Information__
+~~~
+cd group_vars 
+nano rstall.yml
+
+***
+ansible_user: admin
+ansible_password: pass
+ansible_connection: network_cli
+ansible_port: 22
+ansible_become: yes
+ansible_become_method: enable
+ansible_become_password: pass
+ansible_network_os: ios
+***
+~~~
+
+
+<br>
+<br>
+
+
+### STEP 3 - Create Templates
+
+~~~
+!@NetOps
+cd /templates
+nano ip.yml
+
+***
+- name: Configuring IP Addresses
+  tags: ip
+  cisco.ios.ios_config:
+    lines:
+      - "interface {{ item.type }} {{ item.id }}"
+      - "ip address {{ item.address }} {{ item.mask }}"
+      - "{{ 'shutdown' if item.shutdown | default(true) else 'no shutdown' }}"
+***
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nano host_vars/p1.yml
+
+***                                        
+inet:
+  - id: 0/0
+    type: ethernet
+    address: 10.2.1.101
+    mask: 255.255.255.0
+    shutdown: no
+***
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nano host_vars/p1.yml
+
+***
+inet:
+  - type: ethernet
+    id: 1/0
+    address: 10.2.1.102
+    mask: 255.255.255.0
+    shutdown: no
+***
+~~~
+
+<br>
+
+~~~
+!@NetOps
+nano playbooks/test.yml
+
+***
+- name: Test IP
+  hosts:
+    - p1
+    - p2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/ip.yml'
+      loop: "{{ inet }}"
+      loop_control:
+        loop_var: item
+
+***
+~~~
+
+
+
+dhcp.yml
+
+- name: Configuring DHCP Pools
+  tags: dhcp
+  cisco.ios.ios_config:
+    lines:
+      - "ip dhcp excluded-address {{ item.exclude.start }} {{ item.exclude.end }}"
+      - "ip dhcp pool {{ item.name }}"
+      - "network {{ item.network }}  {{ item.mask }}"
+      - "default-router {{ item.gateway }}"
+      - "dns-server {{ item.dns }}"
+      - "domain-name {{ item.domain }}"
+
+
+c1.yml
+
+dhcp:
+  - exclude:
+      start: 10.2.1.1
+	  end: 10.2.1.100
+    name: MGMTPOOL
+    network: 10.2.1.0
+    mask: 255.255.255.0
+    gateway: 10.2.1.1
+    dns: 10.2.1.1
+    domain: MGMT.COM
+
+
+- name: TEST DHCP
+  hosts:
+    - c1
+    - c2
+  gather_facts: False
+  tasks:
+    - include_tasks: '../templates/dhcp.yml'
+      loop: "{{ dhcp }}"
+      loop_control:
+        loop_var: item
+
+
+
+- name: Configure Switchports
+  tags: sw
+  cisco.ios.ios_config:
+    lines:
+      - "interface {{ item.type }} {{ item.id }}"
+      - "switchport mode {{ item.mode }}"
+      - "switchport access vlan {{ item.vlan }}"
+	  
+
+
+
+
+
+
+
+------
+
+
+Templates
+- DHCP
+- SWITCHPORTS
+- INTERFACE
+- EIGRP
+- OSPF
+- BGP
+- NAT
+
+
+- name: EIGRP  
+  tags: eigrp
+  cisco.ios.ios_config:
+    lines:
+      - "ip routing"
+      - "router eigrp {{ item.asn }}"
+      - "eigrp router-id {{ item.id }}"
+      - "network {{ item.network }}"
+	  
+	  
+eigrp:
+  - asn: 100
+    id: 10.2.1.1
+    networks:
+      - { net: 10.2.1.0 0.0.0.255 }
+      - { net: 10.2.2.0 0.0.0.255 }
+      - { net: 192.168.1.128 0.0.0.31 }

@@ -1,0 +1,176 @@
+ANSIBLE TEMPLATES
+
+
+#############
+
+int.yml
+~~~
+---
+- name: Interface
+  tags: int
+  cisco.ios.ios_config:
+    parents:
+      - "interface {{ item.type }} {{ item.id }}"
+    lines:
+      - "ip address {{ item.ipv4.address }} {{ item.ipv4.mask }}"
+      - "{{ 'description ' ~ item.desc if item.desc is defined and item.desc else '' }}"
+      - "{{ 'shutdown' if item.shut | default(true) else 'no shutdown' }}"
+...
+~~~
+
+
+VARIABLES
+~~~
+interfaces:
+  - id: 0/0
+    type: ethernet
+	desc: Configured via ANSIBLE
+	ipv4: 
+	  address: 10.2.1.101
+	  mask: 255.255.255.0
+	shut: false
+  - id: 0/1
+    type: ethernet
+	desc: Configured via ANSIBLE
+	ipv4: 
+	  address: 10.2.101.101
+	  mask: 255.255.255.0
+	shut: false
+~~~
+
+
+#############
+
+
+eigrp.yml
+~~~
+- name: EIGRP INSTANCE
+  tags: eigrp
+  cisco.ios.ios_config:
+    parents:
+      - "router eigrp {{ item.asn }}"
+    lines:
+      - "{{ 'eigrp router-id ' ~ item.routerid if item.routerid is defined and item.routerid else '' }}"
+  loop: "{{ eigrp }}"
+  loop_control:
+    loop_var: item
+
+
+- name: EIGRP NETWORKS
+  tags: eigrpnet
+  cisco.ios.ios_config:
+    parents:
+      - "router eigrp {{ item.0.asn }}"
+    lines:
+      - "network {{ item.1 }}"
+  loop: "{{ eigrp | subelements('networks') }}"
+...
+~~~
+
+
+VARIABLES
+~~~
+eigrp:
+  - asn: 100
+    routerid: 10.2.1.1
+    networks:
+      - 10.2.1.0 0.0.0.255
+      - 10.2.2.0 0.0.0.255
+      - 192.168.1.127 0.0.0.31
+  - asn: 50
+    routerid: 10.2.1.2
+    networks:
+      - 10.2.3.0 0.0.0.255
+      - 10.2.4.0 0.0.0.255
+      - 192.168.5.127 0.0.0.31
+~~~
+
+
+PLAYBOOK
+~~~
+---
+- name: Configuring EIGRP
+  hosts:
+    - c1
+  gather_facts: false
+  tasks:
+    - include_tasks: '../templates/eigrp.yml'
+
+...
+~~~
+
+
+
+
+##########
+
+ospf.yml
+~~~
+---
+- name: OSPF
+  tags: ospf
+  cisco.ios.ios_config:
+    parents:
+      - "router ospf {{ item.process }}"
+    lines:
+      - "{{ 'router-id ' ~ item.routerid if item.routerid is defined and item.routerid else '' }}"
+  loop: "{{ ospf }}"
+  loop_control:
+    loop_var: item
+
+- name: OSPF NETWORKS
+  tags: ospfnet
+  cisco.ios.ios_config:
+    parents:
+      - "router ospf {{ item.0.process }}"
+    lines:
+      - "network {{ item.1.network }} {{ item.1.wildmask }} area {{ item.1.area }}"
+  loop: "{{ ospf | subelements('networks') }}"
+  
+- name: OSPF INTERFACES
+  tags: ospfint
+  cisco.ios.ios_config:
+    parents:
+      - "interface {{ item.1.type }} {{ item.1.id }}"
+    lines:
+      - "{{ 'ip ospf network ~ item.1.network' if item.1.network is defined and item.1.network else omit }}"
+      - "{{ 'ip ospf priority ~ item.1.priority' if item.1.priorty is defined and item.1.priority else omit }}"
+  loop: "{{ ospf | subelements('interfaces') }}"
+  when:
+    - item.0.interface is defined
+    - item.0.interface | length > 0
+...
+~~~
+
+
+VARIABLES
+~~~
+ospf:
+  - process: 1
+    routerid: 1.1.1.1
+    networks:
+      - network: 10.1.1.0
+        wildmask: 0.0.0.3
+        area: 12
+      - network: 1.1.1.1
+        wildmask: 0.0.0.0
+        area: 12
+    interfaces:
+      - type: ethernet
+        id: 1/0
+        priority: 0
+~~~
+
+
+PLAYBOOK
+~~~
+---
+- name: OSPF Configurations
+  hosts:
+    - r1
+    - r2
+  gather_facts: false
+  tasks:
+    - include_tasks: "../templates/ospf.yml"
+...
+~~~
